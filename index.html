@@ -4,310 +4,396 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MHMDataAnalysis&Visualize</title>
-  <!-- Chart.js -->
+  <!-- Chart.js & SheetJS (XLSX) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- SheetJS (XLSX) -->
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #f4f7fc;
-      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-      display: flex;
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
+    * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #f4f7fc; margin: 0; padding: 20px; display: flex; justify-content: center; }
     .app-container {
-      max-width: 1400px;
-      width: 100%;
-      background: white;
-      border-radius: 2rem;
-      box-shadow: 0 20px 40px -12px rgba(0,0,0,0.2);
-      padding: 2rem 2rem 2.5rem;
-      transition: all 0.2s;
+      max-width: 1400px; width: 100%; background: white; border-radius: 28px;
+      padding: 28px 30px; box-shadow: 0 20px 40px rgba(0,20,50,0.12);
     }
-    h1 {
-      font-weight: 500;
-      font-size: 2.2rem;
-      letter-spacing: -0.5px;
-      color: #0a2540;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.25rem;
-    }
-    h1 small {
-      font-size: 0.9rem;
-      font-weight: 400;
-      color: #4b6a8b;
-      margin-left: 0.5rem;
-    }
-    .subhead {
-      color: #3a5a7a;
-      border-bottom: 2px solid #e6edf5;
-      padding-bottom: 1rem;
-      margin-bottom: 1.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-    }
+    h1 { font-weight: 600; font-size: 2rem; color: #0b2b4a; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    h1 small { font-weight: 400; font-size: 1rem; color: #3a6b8f; margin-left: 12px; }
+    .subhead { color: #2c5778; margin-bottom: 24px; border-left: 4px solid #2a7de1; padding-left: 14px; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 18px 30px; align-items: center; margin-bottom: 22px; }
     .upload-area {
-      background: #f0f5fe;
-      border-radius: 1.5rem;
-      padding: 1.2rem 1.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-      border: 1px dashed #b6cfe0;
+      background: #eef3fa; padding: 10px 20px; border-radius: 40px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
     }
-    .upload-area input[type="file"] {
-      background: white;
-      padding: 0.5rem 1rem;
-      border-radius: 40px;
-      border: 1px solid #cbdbe9;
-      font-size: 0.9rem;
-      max-width: 260px;
+    .upload-area label { font-weight: 500; color: #1a405e; }
+    .file-input { display: none; }
+    .file-label {
+      background: #1f5f8e; color: white; padding: 8px 22px; border-radius: 30px;
+      cursor: pointer; font-weight: 500; transition: 0.2s; border: none;
     }
-    .upload-area button {
-      background: #1e3b5c;
-      border: none;
-      color: white;
-      font-weight: 500;
-      padding: 0.6rem 1.8rem;
-      border-radius: 40px;
-      cursor: pointer;
-      transition: 0.15s;
-      box-shadow: 0 4px 6px rgba(0,20,40,0.08);
+    .file-label:hover { background: #13416b; }
+    .file-status { color: #1f4b6e; font-size: 0.9rem; }
+    .controls { display: flex; flex-wrap: wrap; gap: 16px 25px; align-items: center; background: #f8faff; padding: 14px 20px; border-radius: 40px; }
+    .controls select {
+      padding: 8px 18px 8px 14px; border-radius: 30px; border: 1px solid #cbdae9;
+      background: white; font-size: 0.95rem; min-width: 140px; cursor: pointer;
     }
-    .upload-area button:hover { background: #143049; transform: scale(0.97); }
-    .stats-badge {
-      margin-left: auto;
-      background: white;
-      padding: 0.3rem 1.2rem;
-      border-radius: 30px;
-      font-size: 0.9rem;
-      color: #1f3b57;
-      border: 1px solid #d6e2ef;
+    .controls label { font-weight: 500; color: #1a3d5a; display: flex; align-items: center; gap: 6px; }
+    .graph-container {
+      background: #ffffff; border-radius: 24px; padding: 20px 20px 12px 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03); border: 1px solid #e3ecf5;
+      margin: 18px 0 16px 0; position: relative;
     }
-    .control-panel {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.2rem 2rem;
-      background: #f8faff;
-      padding: 1.2rem 1.8rem;
-      border-radius: 1.5rem;
-      margin-bottom: 2rem;
-      align-items: center;
-      border: 1px solid #e3ecf5;
+    .chart-wrapper { position: relative; height: 360px; width: 100%; }
+    .advanced-editor {
+      background: #f2f8ff; border-radius: 30px; padding: 16px 24px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 18px 30px;
+      border: 1px solid #d7e4f2; margin: 12px 0 10px 0;
     }
-    .control-group {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      flex-wrap: wrap;
+    .advanced-editor label { display: flex; align-items: center; gap: 8px; font-weight: 500; color: #1e3f5c; }
+    .advanced-editor input[type="color"] { width: 38px; height: 38px; border: 0; padding: 0; border-radius: 30px; cursor: pointer; background: none; }
+    .advanced-editor input[type="range"] { width: 100px; cursor: pointer; }
+    .btn-sm {
+      background: #e6eef9; border: none; padding: 6px 18px; border-radius: 40px;
+      font-weight: 500; color: #1f5680; cursor: pointer; transition: 0.15s;
     }
-    .control-group label {
-      font-weight: 500;
-      color: #1f3b57;
-      font-size: 0.9rem;
-    }
-    select {
-      background: white;
-      border: 1px solid #cbdbe9;
-      border-radius: 30px;
-      padding: 0.4rem 1.2rem 0.4rem 1rem;
-      font-size: 0.9rem;
-      color: #0a1e30;
-      cursor: pointer;
-      outline: none;
-      min-width: 140px;
-    }
-    select:focus { border-color: #1e3b5c; box-shadow: 0 0 0 2px rgba(30,59,92,0.2); }
-    .graph-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.8rem;
-      margin-top: 1rem;
-    }
-    .graph-card {
-      background: #ffffff;
-      border-radius: 1.5rem;
-      padding: 1.2rem 1.2rem 1rem;
-      box-shadow: 0 6px 18px rgba(0, 20, 40, 0.06);
-      border: 1px solid #eaf0f7;
-      transition: 0.2s;
-    }
-    .graph-card:hover { border-color: #c8dbea; }
-    .graph-card h3 {
-      font-weight: 500;
-      color: #1f3b57;
-      margin-bottom: 0.6rem;
-      font-size: 1rem;
-      display: flex;
-      justify-content: space-between;
-    }
-    .canvas-wrapper { position: relative; height: 200px; width: 100%; }
-    .canvas-wrapper canvas { width: 100% !important; height: 100% !important; }
-    .graph-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
-      justify-content: flex-end;
-    }
-    .graph-actions button {
-      background: transparent;
-      border: 1px solid #d3e0ec;
-      padding: 0.2rem 0.9rem;
-      border-radius: 40px;
-      font-size: 0.75rem;
-      color: #1f3b57;
-      cursor: pointer;
-      transition: 0.1s;
-    }
-    .graph-actions button:hover { background: #e3edf7; border-color: #a0bcd6; }
+    .btn-sm:hover { background: #d0e2f5; }
     .descriptive-box {
-      background: #f2f8ff;
-      border-radius: 1rem;
-      padding: 0.8rem 1.4rem;
-      margin-top: 1.2rem;
-      border-left: 5px solid #1e3b5c;
-      font-size: 0.9rem;
-      color: #0a263f;
-      line-height: 1.5;
+      background: #f7faff; border-radius: 20px; padding: 18px 24px;
+      border-left: 6px solid #2a7de1; margin: 18px 0 10px 0;
+      font-size: 0.95rem; color: #1c3d5a;
     }
-    .descriptive-box strong { color: #0a2a47; }
-    .footer-actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 2rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .badge {
-      background: #dce7f3;
-      padding: 0.2rem 1rem;
-      border-radius: 30px;
-      font-size: 0.8rem;
-    }
-    @media (max-width: 800px) {
-      .graph-grid { grid-template-columns: 1fr; }
-      .app-container { padding: 1.2rem; }
-    }
+    .descriptive-box strong { color: #0a2a44; }
+    .row-cols { display: flex; flex-wrap: wrap; gap: 12px; }
+    .badge { background: #dce6f2; padding: 4px 14px; border-radius: 40px; font-size: 0.8rem; }
+    .footer-note { margin-top: 24px; font-size: 0.85rem; color: #587b99; text-align: right; border-top: 1px solid #dfeaf5; padding-top: 14px; }
+    @media (max-width: 700px) { .app-container { padding: 16px; } }
   </style>
 </head>
 <body>
-<div class="app-container" id="app">
-  <header>
-    <h1>📊 MHMDataAnalysis&Visualize <small>Excel · multi‑var · overlap</small></h1>
-    <div class="subhead">
-      <span>Upload &amp; explore relationships</span>
-      <span class="stats-badge" id="fileStatus">📁 No file loaded</span>
-    </div>
-  </header>
+<div class="app-container">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
+    <h1>📊 MHMDataAnalysis&Visualize <small>Excel · multi‑variable</small></h1>
+    <span class="badge">v1.0</span>
+  </div>
+  <div class="subhead">Upload .xlsx · choose analysis &amp; graph type · overlay &amp; edit</div>
 
   <!-- upload -->
-  <div class="upload-area">
-    <input type="file" id="fileInput" accept=".xlsx,.xls">
-    <button id="loadBtn">⬆ Load &amp; analyze</button>
-    <span style="font-size:0.85rem;color:#3a5a7a;">Supports .xlsx / .xls</span>
+  <div class="flex-row">
+    <div class="upload-area">
+      <label>📁 Upload Excel</label>
+      <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+      <label for="fileInput" class="file-label" id="uploadLabel">Choose file</label>
+      <span class="file-status" id="fileStatus">no file loaded</span>
+    </div>
   </div>
 
-  <!-- controls -->
-  <div class="control-panel">
-    <div class="control-group">
-      <label for="analysisType">🔍 Analysis</label>
-      <select id="analysisType">
+  <!-- dropdowns: analysis type + graph type -->
+  <div class="controls">
+    <div>
+      <label>🔍 Analysis <select id="analysisType">
         <option value="single">Single variable</option>
-        <option value="bi" selected>Bi-variable</option>
-        <option value="multi">Multi-variable</option>
-      </select>
+        <option value="bi" selected>Bi‑variable</option>
+        <option value="multi">Multiple variables</option>
+      </select></label>
     </div>
-    <div class="control-group">
-      <label for="chartType">📈 Graph</label>
-      <select id="chartType">
+    <div>
+      <label>📈 Graph <select id="graphType">
         <option value="bar">Bar chart</option>
         <option value="line">Line chart</option>
+        <option value="scatter">Scatter plot</option>
         <option value="pie">Pie chart</option>
         <option value="doughnut">Doughnut</option>
         <option value="radar">Radar</option>
-        <option value="scatter">Scatter</option>
-        <option value="bubble">Bubble</option>
         <option value="polarArea">Polar area</option>
-      </select>
+      </select></label>
     </div>
-    <div style="display:flex; gap:0.4rem; margin-left:auto;">
-      <button id="overlapToggle" style="background:#1e3b5c;color:white;border:none;padding:0.3rem 1.2rem;border-radius:40px;font-weight:500;">🔁 Overlap</button>
-      <button id="resetGraphs" style="background:#eef4fa;border:1px solid #c7d8e8;padding:0.3rem 1.2rem;border-radius:40px;">↺ Reset</button>
-    </div>
-  </div>
-
-  <!-- graph grid: two charts side by side for overlap -->
-  <div class="graph-grid" id="graphGrid">
-    <div class="graph-card" id="card1">
-      <h3><span id="title1">Chart 1</span> <span class="badge" id="badge1">primary</span></h3>
-      <div class="canvas-wrapper"><canvas id="chart1"></canvas></div>
-      <div class="graph-actions">
-        <button class="editBtn" data-target="chart1">✎ edit</button>
-        <button class="descBtn" data-target="chart1">📋 describe</button>
-      </div>
-      <div class="descriptive-box" id="desc1">Descriptive analysis will appear here.</div>
-    </div>
-    <div class="graph-card" id="card2">
-      <h3><span id="title2">Chart 2</span> <span class="badge" id="badge2">overlay</span></h3>
-      <div class="canvas-wrapper"><canvas id="chart2"></canvas></div>
-      <div class="graph-actions">
-        <button class="editBtn" data-target="chart2">✎ edit</button>
-        <button class="descBtn" data-target="chart2">📋 describe</button>
-      </div>
-      <div class="descriptive-box" id="desc2">Descriptive analysis will appear here.</div>
+    <div>
+      <button class="btn-sm" id="overlayBtn">🔁 Overlay graph</button>
+      <button class="btn-sm" id="resetBtn">↺ Reset chart</button>
     </div>
   </div>
 
-  <div class="footer-actions">
-    <span class="badge">💡 Dropdowns: analysis type &amp; graph type</span>
-    <span class="badge" style="background:#e2edf9;">📌 Overlap graphs show relationships</span>
+  <!-- chart + advanced editing -->
+  <div class="graph-container">
+    <div class="chart-wrapper">
+      <canvas id="myChart"></canvas>
+    </div>
+    <div class="advanced-editor">
+      <label>🎨 Color <input type="color" id="colorPicker" value="#2a7de1"></label>
+      <label>📏 Border width <input type="range" id="borderWidth" min="0.5" max="6" step="0.5" value="2.5"></label>
+      <label>🔘 Point radius <input type="range" id="pointRadius" min="1" max="10" step="0.5" value="4"></label>
+      <label><input type="checkbox" id="fillToggle" checked> Fill</label>
+      <button class="btn-sm" id="applyStyleBtn">Apply style</button>
+    </div>
   </div>
+
+  <!-- descriptive analysis -->
+  <div class="descriptive-box" id="descriptiveBox">
+    <strong>📋 Descriptive analysis</strong> <span id="descText">Load data to see statistics &amp; relations.</span>
+  </div>
+  <div class="footer-note">MHM Data Analysis · drag &amp; drop not needed · overlay works with current data</div>
 </div>
 
 <script>
   (function() {
-    // ----- state -----
-    let workbookData = null;          // array of objects (parsed rows)
+    // ---------- state ----------
+    let workbookData = null;           // parsed rows (array of objects)
     let headers = [];
-    let chart1Instance = null;
-    let chart2Instance = null;
-    let overlapMode = false;          // if true, second chart overlays first (same canvas)
-    let currentAnalysis = 'bi';       // single, bi, multi
+    let chartInstance = null;
+    let overlayChart = null;          // second chart instance for overlay
+    let overlayActive = false;
 
     // DOM refs
     const fileInput = document.getElementById('fileInput');
-    const loadBtn = document.getElementById('loadBtn');
     const fileStatus = document.getElementById('fileStatus');
     const analysisType = document.getElementById('analysisType');
-    const chartType = document.getElementById('chartType');
-    const overlapToggle = document.getElementById('overlapToggle');
-    const resetGraphs = document.getElementById('resetGraphs');
+    const graphType = document.getElementById('graphType');
+    const colorPicker = document.getElementById('colorPicker');
+    const borderWidth = document.getElementById('borderWidth');
+    const pointRadius = document.getElementById('pointRadius');
+    const fillToggle = document.getElementById('fillToggle');
+    const applyStyleBtn = document.getElementById('applyStyleBtn');
+    const overlayBtn = document.getElementById('overlayBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const descText = document.getElementById('descText');
+    const ctx = document.getElementById('myChart').getContext('2d');
 
-    const canvas1 = document.getElementById('chart1');
-    const canvas2 = document.getElementById('chart2');
-    const title1 = document.getElementById('title1');
-    const title2 = document.getElementById('title2');
-    const badge1 = document.getElementById('badge1');
-    const badge2 = document.getElementById('badge2');
-    const desc1 = document.getElementById('desc1');
-    const desc2 = document.getElementById('desc2');
+    // ---------- helpers ----------
+    function getNumericColumns(data, headers) {
+      // return columns that are numeric (at least 60% numeric)
+      const numericCols = [];
+      for (let h of headers) {
+        let values = data.map(row => parseFloat(row[h])).filter(v => !isNaN(v));
+        if (values.length > data.length * 0.5) numericCols.push(h);
+      }
+      return numericCols;
+    }
 
-    // edit & describe buttons (delegated)
-    document.querySelectorAll('.editBtn').forEach(btn => btn.addEventListener('click', onEdit));
-    document.querySelectorAll('.descBtn').forEach(btn => btn.addEventListener('click', onDescribe));
+    function getSampleData(data, headers, limit = 200) {
+      // limit rows for performance
+      const slice = data.slice(0, limit);
+      return slice;
+    }
 
-    // ----- helper: load excel -----
-    function loadExcelFile(file) {
-      if (!file) return;
+    // ---------- build chart ----------
+    function buildChart(analysis, graph, data, headers, color, borderW, pointR, fill, isOverlay = false) {
+      if (!data || data.length === 0) return null;
+      const numericCols = getNumericColumns(data, headers);
+      if (numericCols.length === 0) {
+        descText.innerText = '⚠️ No numeric columns found. Please check your data.';
+        return null;
+      }
+
+      let labels = [];
+      let datasets = [];
+      let selectedCols = [];
+
+      // choose columns based on analysis type
+      if (analysis === 'single') {
+        selectedCols = [numericCols[0]];
+      } else if (analysis === 'bi') {
+        selectedCols = numericCols.slice(0, 2);
+        if (selectedCols.length < 2) selectedCols = numericCols.slice(0, 1);
+      } else { // multi
+        selectedCols = numericCols.slice(0, Math.min(4, numericCols.length));
+        if (selectedCols.length === 0) selectedCols = [numericCols[0]];
+      }
+
+      // build labels: for single or bi, use first column as x if possible, else index
+      const sample = getSampleData(data, headers);
+      if (sample.length === 0) return null;
+
+      // for scatter we need x/y numeric
+      if (graph === 'scatter' && selectedCols.length >= 2) {
+        const xCol = selectedCols[0];
+        const yCol = selectedCols[1];
+        const scatterData = sample.map(row => ({ x: parseFloat(row[xCol]), y: parseFloat(row[yCol]) }))
+                                  .filter(d => !isNaN(d.x) && !isNaN(d.y));
+        if (scatterData.length === 0) return null;
+        return {
+          type: 'scatter',
+          data: {
+            datasets: [{
+              label: `${yCol} vs ${xCol}`,
+              data: scatterData,
+              backgroundColor: color || '#2a7de1',
+              borderColor: color || '#2a7de1',
+              borderWidth: borderW || 2.5,
+              pointRadius: pointR || 4,
+              fill: false,
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        };
+      }
+
+      // for other charts: use first selected col as label (if string) or index
+      let useLabels = sample.map((row, i) => {
+        // try to use first column as label if it's not numeric
+        const firstCol = headers[0];
+        const val = row[firstCol];
+        if (typeof val === 'string' || val instanceof String) return val;
+        if (!isNaN(parseFloat(val)) && headers.length > 1) return `#${i+1}`;
+        return `#${i+1}`;
+      });
+
+      // if first col is numeric and we have >= 2 cols, use first numeric as x labels 
+      const firstNum = selectedCols[0];
+      const useNumericLabels = selectedCols.length >= 2 && !isNaN(parseFloat(sample[0][firstNum]));
+      if (useNumericLabels) {
+        useLabels = sample.map(row => parseFloat(row[firstNum])).filter(v => !isNaN(v));
+        if (useLabels.length === 0) useLabels = sample.map((_, i) => `#${i+1}`);
+      }
+
+      // build datasets: for each selected column (except if used as label)
+      let datasetCols = selectedCols;
+      if (useNumericLabels && selectedCols.length > 1) {
+        datasetCols = selectedCols.slice(1);
+      } else if (!useNumericLabels && selectedCols.length >= 1) {
+        // if first col used as label, remove it from datasets
+        if (headers.length > 1 && !isNaN(parseFloat(sample[0][selectedCols[0]]))) {
+          // but we want to keep it as dataset if single
+          if (selectedCols.length === 1) datasetCols = selectedCols;
+          else datasetCols = selectedCols.slice(1);
+        } else {
+          datasetCols = selectedCols;
+        }
+      }
+      if (datasetCols.length === 0) datasetCols = [selectedCols[0]];
+
+      const colors = ['#2a7de1', '#e85d5d', '#2ea87a', '#e6a02e', '#8b5cf6', '#e060b0'];
+      const usedColor = color || '#2a7de1';
+
+      datasets = datasetCols.map((col, idx) => {
+        const vals = sample.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
+        // align with labels length
+        const dataPoints = sample.map(row => {
+          const v = parseFloat(row[col]);
+          return isNaN(v) ? null : v;
+        });
+        return {
+          label: col,
+          data: dataPoints,
+          backgroundColor: colors[idx % colors.length],
+          borderColor: colors[idx % colors.length],
+          borderWidth: borderW || 2.5,
+          pointRadius: pointR || 4,
+          fill: fill !== undefined ? fill : true,
+          tension: 0.2,
+        };
+      });
+
+      // for pie/doughnut/polar we use only first dataset
+      let chartType = graph;
+      if (['pie', 'doughnut', 'polarArea'].includes(graph)) {
+        if (datasets.length > 0) {
+          const singleData = datasets[0].data.filter(v => v !== null);
+          return {
+            type: graph,
+            data: {
+              labels: useLabels.slice(0, singleData.length),
+              datasets: [{
+                data: singleData,
+                backgroundColor: ['#2a7de1','#e85d5d','#2ea87a','#e6a02e','#8b5cf6','#e060b0'],
+                borderWidth: borderW || 2,
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+          };
+        }
+        return null;
+      }
+
+      // bar, line, radar
+      if (graph === 'radar') {
+        chartType = 'radar';
+      } else if (graph === 'line') {
+        chartType = 'line';
+      } else {
+        chartType = 'bar';
+      }
+
+      return {
+        type: chartType,
+        data: { labels: useLabels, datasets: datasets },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+      };
+    }
+
+    // ---------- render chart ----------
+    function renderChart(overlay = false) {
+      if (!workbookData || workbookData.length === 0) {
+        descText.innerText = 'Please upload an Excel file first.';
+        return;
+      }
+      const analysis = analysisType.value;
+      const graph = graphType.value;
+      const color = colorPicker.value;
+      const borderW = parseFloat(borderWidth.value);
+      const pointR = parseFloat(pointRadius.value);
+      const fill = fillToggle.checked;
+
+      const chartConfig = buildChart(analysis, graph, workbookData, headers, color, borderW, pointR, fill);
+      if (!chartConfig) {
+        descText.innerText = '⚠️ Could not generate chart. Check numeric columns.';
+        return;
+      }
+
+      // destroy previous chart(s)
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+      if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
+
+      if (overlay) {
+        // create overlay: first chart with default, second with new config (different color)
+        const defaultConfig = buildChart(analysis, graph, workbookData, headers, '#b0c7e0', 2, 3, false);
+        if (defaultConfig) {
+          chartInstance = new Chart(ctx, defaultConfig);
+        }
+        // overlay chart (second) with different color (e.g. red)
+        const overlayConfig = buildChart(analysis, graph, workbookData, headers, '#e85d5d', 3, 5, false);
+        if (overlayConfig && chartInstance) {
+          overlayChart = new Chart(ctx, overlayConfig);
+          overlayActive = true;
+          // merge datasets
+          if (overlayChart.data.datasets) {
+            overlayChart.data.datasets.forEach(ds => { ds.borderColor = '#d94f4f'; ds.backgroundColor = '#d94f4f40'; });
+            overlayChart.update();
+          }
+        } else {
+          // if overlay fails, render normal
+          renderChart(false);
+          overlayActive = false;
+          return;
+        }
+      } else {
+        chartInstance = new Chart(ctx, chartConfig);
+        overlayActive = false;
+      }
+
+      // descriptive analysis
+      updateDescriptive(analysis, graph);
+    }
+
+    function updateDescriptive(analysis, graph) {
+      if (!workbookData || workbookData.length === 0) {
+        descText.innerText = 'No data loaded.';
+        return;
+      }
+      const numericCols = getNumericColumns(workbookData, headers);
+      let desc = `📊 Analysis: ${analysis} · Graph: ${graph} · Rows: ${workbookData.length} · Numeric columns: ${numericCols.join(', ') || 'none'}`;
+      if (numericCols.length > 0) {
+        const sampleCol = numericCols[0];
+        const values = workbookData.map(r => parseFloat(r[sampleCol])).filter(v => !isNaN(v));
+        if (values.length > 0) {
+          const mean = (values.reduce((a,b) => a+b, 0) / values.length).toFixed(2);
+          const min = Math.min(...values).toFixed(2);
+          const max = Math.max(...values).toFixed(2);
+          desc += ` · ${sampleCol}: mean ${mean}, min ${min}, max ${max}`;
+        }
+      }
+      descText.innerText = desc;
+    }
+
+    // ---------- file handling ----------
+    function handleFile(file) {
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
@@ -315,256 +401,67 @@
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const json = XLSX.utils.sheet_to_json(firstSheet);
-          if (!json || json.length === 0) {
-            alert('No data found in the sheet.');
+          if (json.length === 0) {
+            fileStatus.innerText = '⚠️ Empty sheet';
             return;
           }
           workbookData = json;
           headers = Object.keys(json[0]);
-          fileStatus.innerText = `✅ Loaded: ${file.name} (${json.length} rows, ${headers.length} cols)`;
-          // default analysis
-          updateAnalysisAndCharts();
+          fileStatus.innerText = `✅ ${json.length} rows, ${headers.length} cols`;
+          renderChart(false);
         } catch (err) {
-          alert('Error reading file: ' + err.message);
+          fileStatus.innerText = '❌ Error parsing file';
+          console.error(err);
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
-    // ----- main chart update -----
-    function updateAnalysisAndCharts() {
-      if (!workbookData || workbookData.length === 0) {
-        // show empty
-        return;
+    fileInput.addEventListener('change', function(e) {
+      if (this.files.length > 0) {
+        handleFile(this.files[0]);
       }
-      const analysis = analysisType.value; // 'single', 'bi', 'multi'
-      currentAnalysis = analysis;
-      const chartTypeVal = chartType.value;
-
-      // determine data based on analysis
-      let data1 = [], data2 = [];
-      let label1 = '', label2 = '';
-      let descText1 = '', descText2 = '';
-
-      if (analysis === 'single') {
-        // pick first numeric column
-        const numCol = findNumericColumn(headers, workbookData);
-        if (!numCol) { alert('No numeric column found for single variable.'); return; }
-        const values = workbookData.map(row => parseFloat(row[numCol])).filter(v => !isNaN(v));
-        data1 = values;
-        label1 = numCol;
-        data2 = [];
-        label2 = '';
-        descText1 = describeNumeric(data1, label1);
-        descText2 = 'Overlay not available for single variable.';
-      } 
-      else if (analysis === 'bi') {
-        const numCols = findNumericColumns(headers, workbookData);
-        if (numCols.length < 2) { alert('Need at least 2 numeric columns for bi-variable.'); return; }
-        const col1 = numCols[0], col2 = numCols[1];
-        const vals1 = workbookData.map(row => parseFloat(row[col1])).filter(v => !isNaN(v));
-        const vals2 = workbookData.map(row => parseFloat(row[col2])).filter(v => !isNaN(v));
-        data1 = vals1;
-        data2 = vals2;
-        label1 = col1;
-        label2 = col2;
-        descText1 = describeNumeric(vals1, col1);
-        descText2 = describeNumeric(vals2, col2);
-      } 
-      else if (analysis === 'multi') {
-        const numCols = findNumericColumns(headers, workbookData);
-        if (numCols.length < 3) { alert('Need at least 3 numeric columns for multi-variable.'); return; }
-        // use first 3 for demo (could be extended)
-        const col1 = numCols[0], col2 = numCols[1], col3 = numCols[2];
-        const vals1 = workbookData.map(row => parseFloat(row[col1])).filter(v => !isNaN(v));
-        const vals2 = workbookData.map(row => parseFloat(row[col2])).filter(v => !isNaN(v));
-        const vals3 = workbookData.map(row => parseFloat(row[col3])).filter(v => !isNaN(v));
-        // For multi: chart1 shows col1, chart2 shows col2 & col3 (overlay)
-        data1 = vals1;
-        data2 = [vals2, vals3];
-        label1 = col1;
-        label2 = `${col2} & ${col3}`;
-        descText1 = describeNumeric(vals1, col1);
-        descText2 = `${col2}: ${describeNumeric(vals2, col2)}\n${col3}: ${describeNumeric(vals3, col3)}`;
-      }
-
-      // build charts
-      buildChart('chart1', data1, label1, chartTypeVal, analysis, 0);
-      if (overlapMode && data2 && data2.length > 0) {
-        // overlay on chart1? we put second dataset as overlay on chart2
-        // but we want both visible: we use chart2 as overlay on same canvas? we use separate canvas but we set chart2 as overlay 
-        // but we want to visually overlap: we can draw chart2 with same canvas? we use two canvas but we can set chart2 over chart1?
-        // overlap: we will render chart2 as additional dataset on chart1 (merge)
-        // but we keep two separate charts, but we can "overlap" by copying data to chart1 as extra dataset.
-        if (chart1Instance) {
-          // add second dataset to chart1
-          const extraData = Array.isArray(data2) ? data2 : [data2];
-          extraData.forEach((d, i) => {
-            const label = (analysis === 'multi') ? `extra ${i+1}` : label2;
-            chart1Instance.data.datasets.push({
-              label: label || 'overlay',
-              data: d,
-              backgroundColor: `hsla(${200 + i*40}, 70%, 60%, 0.4)`,
-              borderColor: `hsl(${200 + i*40}, 70%, 50%)`,
-              borderWidth: 2,
-              pointRadius: 3,
-            });
-          });
-          chart1Instance.update();
-          title1.innerText = `${label1} (overlay)`;
-          badge1.innerText = '🔁 overlapped';
-          // hide chart2
-          canvas2.style.display = 'none';
-          document.getElementById('card2').style.display = 'none';
-        }
-      } else {
-        // normal separate charts
-        canvas2.style.display = 'block';
-        document.getElementById('card2').style.display = 'block';
-        // build chart2 if data2 exists
-        if (data2 && data2.length > 0 && !Array.isArray(data2[0])) {
-          buildChart('chart2', data2, label2, chartTypeVal, analysis, 1);
-        } else if (data2 && Array.isArray(data2[0]) && data2.length > 0) {
-          // multi: data2 is array of arrays
-          buildChart('chart2', data2[0], label2, chartTypeVal, analysis, 1);
-        } else {
-          // clear chart2
-          if (chart2Instance) { chart2Instance.destroy(); chart2Instance = null; }
-        }
-      }
-
-      // update description boxes
-      desc1.innerText = descText1 || 'No description.';
-      desc2.innerText = descText2 || 'No description.';
-    }
-
-    // ----- build chart helper -----
-    function buildChart(canvasId, data, label, chartType, analysis, index) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      // destroy previous
-      if (index === 0 && chart1Instance) { chart1Instance.destroy(); chart1Instance = null; }
-      else if (index === 1 && chart2Instance) { chart2Instance.destroy(); chart2Instance = null; }
-
-      if (!data || data.length === 0) return;
-
-      // determine config
-      let config = {
-        type: chartType,
-        data: {
-          labels: data.map((_, i) => `#${i+1}`),
-          datasets: [{
-            label: label || 'data',
-            data: data,
-            backgroundColor: 'rgba(30, 59, 92, 0.5)',
-            borderColor: '#1e3b5c',
-            borderWidth: 2,
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      };
-
-      // adapt for pie/doughnut/polar
-      if (['pie', 'doughnut', 'polarArea'].includes(chartType)) {
-        config.data.labels = data.map((_, i) => `${label || 'val'} ${i+1}`);
-        config.options = { responsive: true, maintainAspectRatio: false };
-      }
-      if (chartType === 'scatter' || chartType === 'bubble') {
-        // scatter: data as {x,y}
-        const scatterData = data.map((v, i) => ({ x: i, y: v }));
-        config.data.datasets[0].data = scatterData;
-        config.data.labels = [];
-      }
-
-      // radar uses same
-      const newChart = new Chart(ctx, config);
-      if (index === 0) chart1Instance = newChart;
-      else chart2Instance = newChart;
-
-      // update title
-      if (index === 0) { title1.innerText = label || 'Chart 1'; badge1.innerText = overlapMode ? '🔁 overlap' : 'primary'; }
-      else { title2.innerText = label || 'Chart 2'; badge2.innerText = 'secondary'; }
-    }
-
-    // ----- numeric helpers -----
-    function findNumericColumn(headers, data) {
-      for (let h of headers) {
-        const val = data[0]?.[h];
-        if (typeof val === 'number' || !isNaN(parseFloat(val))) return h;
-      }
-      return headers[0] || null;
-    }
-    function findNumericColumns(headers, data) {
-      const nums = [];
-      for (let h of headers) {
-        const sample = data.find(row => row[h] !== undefined && row[h] !== null);
-        if (sample && !isNaN(parseFloat(sample[h]))) nums.push(h);
-      }
-      return nums;
-    }
-    function describeNumeric(arr, name) {
-      if (!arr || arr.length === 0) return `No data for ${name}.`;
-      const sorted = [...arr].sort((a,b)=>a-b);
-      const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
-      const median = sorted[Math.floor(sorted.length/2)];
-      const min = sorted[0];
-      const max = sorted[sorted.length-1];
-      return `📊 ${name}: n=${arr.length}, mean=${mean.toFixed(2)}, median=${median.toFixed(2)}, min=${min.toFixed(2)}, max=${max.toFixed(2)}`;
-    }
-
-    // ----- event handlers -----
-    function onEdit(e) {
-      const target = e.currentTarget.dataset.target;
-      const chart = target === 'chart1' ? chart1Instance : chart2Instance;
-      if (!chart) { alert('No chart to edit'); return; }
-      // simple: change color
-      const newColor = prompt('Enter new color (hex, e.g. #ff6b6b):', '#1e3b5c');
-      if (newColor) {
-        chart.data.datasets.forEach(ds => ds.borderColor = newColor);
-        chart.update();
-      }
-    }
-    function onDescribe(e) {
-      const target = e.currentTarget.dataset.target;
-      const descBox = target === 'chart1' ? desc1 : desc2;
-      // show extra descriptive stats
-      alert(descBox.innerText || 'No descriptive info.');
-    }
-
-    // ----- event listeners -----
-    loadBtn.addEventListener('click', function() {
-      if (fileInput.files.length === 0) { alert('Please select an Excel file first.'); return; }
-      loadExcelFile(fileInput.files[0]);
     });
 
-    analysisType.addEventListener('change', updateAnalysisAndCharts);
-    chartType.addEventListener('change', updateAnalysisAndCharts);
+    // ---------- event listeners ----------
+    analysisType.addEventListener('change', () => renderChart(overlayActive));
+    graphType.addEventListener('change', () => renderChart(overlayActive));
 
-    overlapToggle.addEventListener('click', function() {
-      overlapMode = !overlapMode;
-      overlapToggle.innerText = overlapMode ? '🔁 Overlap ON' : '🔁 Overlap';
-      updateAnalysisAndCharts();
+    applyStyleBtn.addEventListener('click', () => {
+      renderChart(overlayActive);
     });
 
-    resetGraphs.addEventListener('click', function() {
-      // reset to default state
-      if (chart1Instance) { chart1Instance.destroy(); chart1Instance = null; }
-      if (chart2Instance) { chart2Instance.destroy(); chart2Instance = null; }
-      canvas2.style.display = 'block';
-      document.getElementById('card2').style.display = 'block';
-      overlapMode = false;
-      overlapToggle.innerText = '🔁 Overlap';
-      desc1.innerText = 'Descriptive analysis will appear here.';
-      desc2.innerText = 'Descriptive analysis will appear here.';
-      title1.innerText = 'Chart 1';
-      title2.innerText = 'Chart 2';
-      badge1.innerText = 'primary';
-      badge2.innerText = 'overlay';
-      // reload data
-      if (workbookData) updateAnalysisAndCharts();
+    overlayBtn.addEventListener('click', function() {
+      if (!workbookData) { alert('Load data first'); return; }
+      overlayActive = !overlayActive;
+      renderChart(overlayActive);
     });
 
-    // init
-    fileStatus.innerText = '📁 No file loaded';
+    resetBtn.addEventListener('click', function() {
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+      if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
+      overlayActive = false;
+      renderChart(false);
+    });
+
+    // initial demo data (embedded small sample)
+    function loadDemoData() {
+      const demo = [
+        { 'Region': 'North', 'Sales': 320, 'Profit': 45, 'Customers': 120 },
+        { 'Region': 'South', 'Sales': 280, 'Profit': 38, 'Customers': 95 },
+        { 'Region': 'East', 'Sales': 410, 'Profit': 62, 'Customers': 150 },
+        { 'Region': 'West', 'Sales': 190, 'Profit': 22, 'Customers': 70 },
+      ];
+      workbookData = demo;
+      headers = Object.keys(demo[0]);
+      fileStatus.innerText = `📋 demo data (${demo.length} rows)`;
+      renderChart(false);
+    }
+    // load demo automatically
+    loadDemoData();
+
+    // allow re-upload
+    window.loadDemoData = loadDemoData;
   })();
 </script>
 </body>
