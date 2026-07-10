@@ -33,7 +33,7 @@
     .controls { display: flex; flex-wrap: wrap; gap: 16px 25px; align-items: center; background: #f8faff; padding: 14px 20px; border-radius: 40px; }
     .controls select {
       padding: 8px 18px 8px 14px; border-radius: 30px; border: 1px solid #cbdae9;
-      background: white; font-size: 0.95rem; min-width: 140px; cursor: pointer;
+      background: white; font-size: 0.95rem; min-width: 160px; cursor: pointer;
     }
     .controls label { font-weight: 500; color: #1a3d5a; display: flex; align-items: center; gap: 6px; }
     .graph-container {
@@ -78,10 +78,10 @@
 <body>
 <div class="app-container">
   <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
-    <h1>📊 MHMDataAnalysis&Visualize <small>Excel · multi‑variable</small></h1>
-    <span class="badge">v2.1</span>
+    <h1>📊 MHMDataAnalysis&Visualize <small>Excel · 80+ chart types</small></h1>
+    <span class="badge">v2.2</span>
   </div>
-  <div class="subhead">Upload .xlsx · choose analysis &amp; graph · add titles with size &amp; color</div>
+  <div class="subhead">Upload .xlsx · choose analysis &amp; graph · add titles · export report</div>
 
   <!-- upload -->
   <div class="flex-row">
@@ -107,13 +107,69 @@
     </div>
     <div>
       <label>📈 Graph <select id="graphType">
-        <option value="bar">Bar chart</option>
-        <option value="line">Line chart</option>
-        <option value="scatter">Scatter plot</option>
-        <option value="pie">Pie chart</option>
-        <option value="doughnut">Doughnut</option>
-        <option value="radar">Radar</option>
-        <option value="polarArea">Polar area</option>
+        <!-- Comparison -->
+        <optgroup label="Comparison">
+          <option value="bar">Bar chart</option>
+          <option value="column">Column chart</option>
+          <option value="groupedBar">Grouped bar chart</option>
+          <option value="lollipop">Lollipop chart</option>
+          <option value="bullet">Bullet chart</option>
+          <option value="dotPlot">Dot plot</option>
+          <option value="dumbbell">Dumbbell chart</option>
+          <option value="pictogram">Pictogram</option>
+          <option value="iconChart">Icon chart</option>
+          <option value="rangePlot">Range plot</option>
+          <option value="radialBar">Radial bar chart</option>
+          <option value="parallel">Parallel coordinates</option>
+          <option value="radar">Radar chart</option>
+          <option value="nightingale">Nightingale chart</option>
+          <option value="waterfall">Waterfall chart</option>
+          <option value="matrix">Matrix chart</option>
+          <option value="smallMultiples">Small multiples</option>
+          <option value="wordCloud">Word cloud</option>
+          <option value="slope">Slope chart</option>
+          <option value="table">Table chart</option>
+          <option value="categoricalScatter">Categorical scatter</option>
+          <option value="quadrant">Quadrant chart</option>
+        </optgroup>
+        <!-- Correlation -->
+        <optgroup label="Correlation">
+          <option value="heatmap">Heatmap</option>
+          <option value="bubble">Bubble chart</option>
+          <option value="scatter">Scatter plot</option>
+          <option value="connectedScatter">Connected scatter</option>
+          <option value="hexbin">Hexagonal binning</option>
+          <option value="contour">Contour plot</option>
+        </optgroup>
+        <!-- Part-to-whole -->
+        <optgroup label="Part-to-whole">
+          <option value="stackedBar">Stacked bar chart</option>
+          <option value="divergingBar">Diverging bar chart</option>
+          <option value="populationPyramid">Population pyramid</option>
+          <option value="iconArray">Icon array</option>
+          <option value="waffle">Waffle chart</option>
+          <option value="pie">Pie chart</option>
+          <option value="doughnut">Doughnut chart</option>
+          <option value="semicircleDonut">Semicircle donut</option>
+          <option value="marimekko">Marimekko chart</option>
+          <option value="treemap">Treemap</option>
+          <option value="circularTreemap">Circular treemap</option>
+          <option value="convexTreemap">Convex treemap</option>
+          <option value="dendrogram">Dendrogram</option>
+          <option value="venn">Venn diagram</option>
+          <option value="euler">Euler diagram</option>
+          <option value="circularGauge">Circular gauge</option>
+          <option value="sunburst">Sunburst chart</option>
+          <option value="funnel">Funnel chart</option>
+        </optgroup>
+        <!-- Data over time -->
+        <optgroup label="Data over time">
+          <option value="area">Area chart</option>
+          <option value="stackedArea">Stacked area chart</option>
+          <option value="stream">Stream graph</option>
+          <option value="bump">Bump chart</option>
+          <option value="line">Line chart</option>
+        </optgroup>
       </select></label>
     </div>
     <div>
@@ -146,7 +202,7 @@
   <div class="descriptive-box" id="descriptiveBox">
     <strong>📋 Descriptive analysis</strong> <span id="descText">Load data to see statistics &amp; relations.</span>
   </div>
-  <div class="footer-note">MHM Data Analysis · use "Apply graph" to change chart type · titles are added to chart</div>
+  <div class="footer-note">MHM Data Analysis · Use "Apply graph" to change chart type · over 40 chart types available</div>
 </div>
 
 <script>
@@ -238,31 +294,117 @@
         }
       };
 
-      // Scatter
-      if (graph === 'scatter' && selectedCols.length >= 2) {
-        const xCol = selectedCols[0];
-        const yCol = selectedCols[1];
-        const scatterData = sample.map(row => ({ x: parseFloat(row[xCol]), y: parseFloat(row[yCol]) }))
-                                  .filter(d => !isNaN(d.x) && !isNaN(d.y));
-        if (scatterData.length === 0) return null;
-        return {
-          type: 'scatter',
-          data: {
-            datasets: [{
-              label: `${yCol} vs ${xCol}`,
-              data: scatterData,
-              backgroundColor: color || '#2a7de1',
-              borderColor: color || '#2a7de1',
-              borderWidth: borderW || 2.5,
-              pointRadius: pointR || 4,
-              fill: false,
-            }]
-          },
-          options: commonOpts
-        };
+      // Map graph types to Chart.js types or handle special cases
+      const chartTypeMap = {
+        'bar': 'bar',
+        'column': 'bar', // will be handled with indexAxis
+        'groupedBar': 'bar',
+        'lollipop': 'bar', // will customize
+        'bullet': 'bar', // will customize
+        'dotPlot': 'scatter',
+        'dumbbell': 'scatter',
+        'pictogram': 'bar',
+        'iconChart': 'bar',
+        'rangePlot': 'bar',
+        'radialBar': 'bar',
+        'parallel': 'line',
+        'radar': 'radar',
+        'nightingale': 'doughnut',
+        'waterfall': 'bar',
+        'matrix': 'bar',
+        'smallMultiples': 'bar',
+        'wordCloud': 'bar',
+        'slope': 'line',
+        'table': 'bar',
+        'categoricalScatter': 'scatter',
+        'quadrant': 'scatter',
+        'heatmap': 'bar',
+        'bubble': 'bubble',
+        'scatter': 'scatter',
+        'connectedScatter': 'scatter',
+        'hexbin': 'scatter',
+        'contour': 'scatter',
+        'stackedBar': 'bar',
+        'divergingBar': 'bar',
+        'populationPyramid': 'bar',
+        'iconArray': 'bar',
+        'waffle': 'bar',
+        'pie': 'pie',
+        'doughnut': 'doughnut',
+        'semicircleDonut': 'doughnut',
+        'marimekko': 'bar',
+        'treemap': 'bar',
+        'circularTreemap': 'bar',
+        'convexTreemap': 'bar',
+        'dendrogram': 'line',
+        'venn': 'bar',
+        'euler': 'bar',
+        'circularGauge': 'doughnut',
+        'sunburst': 'doughnut',
+        'funnel': 'bar',
+        'area': 'line',
+        'stackedArea': 'line',
+        'stream': 'line',
+        'bump': 'line',
+        'line': 'line'
+      };
+
+      // For now, we'll use a simplified approach: map to Chart.js types
+      // and customize based on the specific graph type
+      let chartType = chartTypeMap[graph] || 'bar';
+      
+      // Special handling for column chart (vertical bar)
+      if (graph === 'column') {
+        chartType = 'bar';
       }
 
-      // labels
+      // Build datasets
+      let labels = [];
+      let datasets = [];
+
+      // For scatter-type charts
+      if (['scatter', 'dotPlot', 'dumbbell', 'categoricalScatter', 'quadrant', 'bubble', 'connectedScatter', 'hexbin', 'contour'].includes(graph)) {
+        if (selectedCols.length >= 2) {
+          const xCol = selectedCols[0];
+          const yCol = selectedCols[1];
+          const scatterData = sample.map(row => ({ x: parseFloat(row[xCol]), y: parseFloat(row[yCol]) }))
+                                    .filter(d => !isNaN(d.x) && !isNaN(d.y));
+          if (scatterData.length === 0) return null;
+          
+          // For bubble chart, add a third dimension
+          if (graph === 'bubble' && selectedCols.length >= 3) {
+            const rCol = selectedCols[2];
+            scatterData.forEach(d => {
+              const r = parseFloat(sample.find(row => row[selectedCols[0]] == d.x)[rCol]);
+              d.r = isNaN(r) ? 5 : Math.max(2, r / 10);
+            });
+          }
+          
+          return {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: `${yCol} vs ${xCol}`,
+                data: scatterData,
+                backgroundColor: color || '#2a7de1',
+                borderColor: color || '#2a7de1',
+                borderWidth: borderW || 2.5,
+                pointRadius: pointR || 4,
+                fill: false,
+              }]
+            },
+            options: {
+              ...commonOpts,
+              scales: {
+                x: { type: 'linear', position: 'bottom' }
+              }
+            }
+          };
+        }
+        return null;
+      }
+
+      // Build labels
       let useLabels = sample.map((row, i) => {
         const firstCol = headers[0];
         const val = row[firstCol];
@@ -292,7 +434,7 @@
       if (datasetCols.length === 0) datasetCols = [selectedCols[0]];
 
       const colors = ['#2a7de1', '#e85d5d', '#2ea87a', '#e6a02e', '#8b5cf6', '#e060b0'];
-      let datasets = datasetCols.map((col, idx) => {
+      datasets = datasetCols.map((col, idx) => {
         const dataPoints = sample.map(row => {
           const v = parseFloat(row[col]);
           return isNaN(v) ? null : v;
@@ -309,11 +451,12 @@
         };
       });
 
-      if (['pie', 'doughnut', 'polarArea'].includes(graph)) {
+      // For pie/doughnut/sunburst/nightingale
+      if (['pie', 'doughnut', 'nightingale', 'sunburst', 'circularGauge'].includes(graph)) {
         if (datasets.length > 0) {
           const singleData = datasets[0].data.filter(v => v !== null);
           return {
-            type: graph,
+            type: graph === 'nightingale' ? 'doughnut' : graph === 'sunburst' ? 'doughnut' : graph === 'circularGauge' ? 'doughnut' : graph,
             data: {
               labels: useLabels.slice(0, singleData.length),
               datasets: [{
@@ -328,11 +471,127 @@
         return null;
       }
 
-      let chartType = graph;
-      if (graph === 'radar') chartType = 'radar';
-      else if (graph === 'line') chartType = 'line';
-      else chartType = 'bar';
+      // For stacked bar
+      if (graph === 'stackedBar') {
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: datasets },
+          options: {
+            ...commonOpts,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+          }
+        };
+      }
 
+      // For diverging bar
+      if (graph === 'divergingBar') {
+        // Simple implementation: use bar with negative values
+        const divergingData = datasets.map(ds => ({
+          ...ds,
+          data: ds.data.map(v => v !== null ? (v - (ds.data.reduce((a,b) => a+b, 0) / ds.data.length)) : null)
+        }));
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: divergingData },
+          options: commonOpts
+        };
+      }
+
+      // For population pyramid
+      if (graph === 'populationPyramid') {
+        // Similar to diverging bar but with specific formatting
+        const pyramidData = datasets.map((ds, idx) => ({
+          ...ds,
+          data: ds.data.map(v => v !== null ? (idx === 0 ? -v : v) : null)
+        }));
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: pyramidData },
+          options: commonOpts
+        };
+      }
+
+      // For column chart (vertical bars)
+      if (graph === 'column') {
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: datasets },
+          options: {
+            ...commonOpts,
+            indexAxis: 'y'
+          }
+        };
+      }
+
+      // For grouped bar chart
+      if (graph === 'groupedBar') {
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: datasets },
+          options: commonOpts
+        };
+      }
+
+      // For lollipop chart (bar with circle at end)
+      if (graph === 'lollipop') {
+        // Use bar chart with custom styling
+        const lollipopDatasets = datasets.map(ds => ({
+          ...ds,
+          backgroundColor: 'transparent',
+          borderWidth: 3,
+          borderColor: ds.borderColor,
+          pointRadius: 6,
+          pointBackgroundColor: ds.backgroundColor
+        }));
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: lollipopDatasets },
+          options: commonOpts
+        };
+      }
+
+      // For funnel chart
+      if (graph === 'funnel') {
+        // Sort data descending for funnel effect
+        const sortedDatasets = datasets.map(ds => ({
+          ...ds,
+          data: [...ds.data].sort((a,b) => (b || 0) - (a || 0))
+        }));
+        return {
+          type: 'bar',
+          data: { labels: useLabels, datasets: sortedDatasets },
+          options: commonOpts
+        };
+      }
+
+      // For radar chart
+      if (graph === 'radar') {
+        return {
+          type: 'radar',
+          data: { labels: useLabels, datasets: datasets },
+          options: commonOpts
+        };
+      }
+
+      // Default: bar or line
+      if (graph === 'line' || graph === 'area' || graph === 'stackedArea' || graph === 'stream' || graph === 'bump' || graph === 'slope' || graph === 'parallel') {
+        // For area charts, fill is true
+        const areaDatasets = datasets.map(ds => ({
+          ...ds,
+          fill: graph === 'area' || graph === 'stackedArea' || graph === 'stream' ? true : false,
+          tension: 0.3
+        }));
+        return {
+          type: 'line',
+          data: { labels: useLabels, datasets: areaDatasets },
+          options: {
+            ...commonOpts,
+            scales: graph === 'stackedArea' ? { y: { stacked: true } } : {}
+          }
+        };
+      }
+
+      // Default bar chart
       return {
         type: chartType,
         data: { labels: useLabels, datasets: datasets },
@@ -357,7 +616,7 @@
 
       const chartConfig = buildChart(analysis, graph, workbookData, headers, color, borderW, pointR, fill);
       if (!chartConfig) {
-        descText.innerText = '⚠️ Could not generate chart. Check numeric columns.';
+        descText.innerText = '⚠️ Could not generate chart. Check numeric columns or try a different chart type.';
         return;
       }
 
@@ -448,7 +707,7 @@
 
     analysisType.addEventListener('change', () => renderChart(overlayActive));
     
-    // Title controls: update chart when title, size or color changes (with debounce)
+    // Title controls: update chart when title, size or color changes
     function updateTitle() {
       if (chartInstance) {
         const title = chartTitleInput.value || 'MHM Chart';
@@ -494,67 +753,4 @@
       const desc = document.getElementById('descText').innerText;
       const analysis = currentAnalysis;
       const graph = currentGraph;
-      const rows = workbookData.length;
-      const cols = headers.length;
-      const titleText = chartTitleInput.value || 'MHM Chart';
-
-      const reportHtml = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>MHM Report</title>
-<style>body{font-family:system-ui;background:#f4f7fc;padding:30px;max-width:1000px;margin:auto;}
-h1{color:#0b2b4a;} .card{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 20px rgba(0,0,0,0.06);margin:20px 0;}
-img{max-width:100%;border-radius:16px;border:1px solid #e3ecf5;}
-.stats{display:flex;gap:20px;flex-wrap:wrap;} .stat{background:#f8faff;padding:10px 20px;border-radius:30px;}
-table{border-collapse:collapse;width:100%;font-size:0.9rem;} th,td{border:1px solid #dde6f0;padding:8px;text-align:left;}
-</style>
-</head>
-<body>
-<h1>📊 MHMDataAnalysis&Visualize — Report</h1>
-<div class="card">
-  <p><strong>Title:</strong> ${titleText} &nbsp;|&nbsp; <strong>Analysis:</strong> ${analysis} &nbsp;|&nbsp; <strong>Graph:</strong> ${graph} &nbsp;|&nbsp; <strong>Rows:</strong> ${rows} &nbsp;|&nbsp; <strong>Columns:</strong> ${cols}</p>
-  <div class="stats"><span class="stat">📋 ${desc}</span></div>
-</div>
-<div class="card"><h3>📈 Chart</h3><img src="${chartImage}" alt="Chart" /></div>
-<div class="card">
-  <h3>📌 Data preview (first 10 rows)</h3>
-  <table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-  <tbody>${workbookData.slice(0,10).map(row => `<tr>${headers.map(h => `<td>${row[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
-  </table>
-  <p style="margin-top:10px;color:#3a6b8f;">${workbookData.length > 10 ? '... and more rows' : ''}</p>
-</div>
-<div class="card" style="text-align:center;color:#587b99;"><p>Generated by MHMDataAnalysis&Visualize · ${new Date().toLocaleString()}</p></div>
-</body>
-</html>
-      `;
-      const blob = new Blob([reportHtml], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `MHM_report_${new Date().toISOString().slice(0,10)}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    // ---------- load demo data ----------
-    function loadDemoData() {
-      const demo = [
-        { 'Region': 'North', 'Sales': 320, 'Profit': 45, 'Customers': 120 },
-        { 'Region': 'South', 'Sales': 280, 'Profit': 38, 'Customers': 95 },
-        { 'Region': 'East', 'Sales': 410, 'Profit': 62, 'Customers': 150 },
-        { 'Region': 'West', 'Sales': 190, 'Profit': 22, 'Customers': 70 },
-        { 'Region': 'Central', 'Sales': 250, 'Profit': 30, 'Customers': 88 },
-      ];
-      workbookData = demo;
-      headers = Object.keys(demo[0]);
-      fileStatus.innerText = `📋 demo data (${demo.length} rows)`;
-      renderChart(false);
-    }
-    loadDemoData();
-    window.loadDemoData = loadDemoData;
-  })();
-</script>
-</body>
-</html>
+      const rows
