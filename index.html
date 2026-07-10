@@ -11,7 +11,7 @@
     * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
     body { background: #f4f7fc; margin: 0; padding: 20px; display: flex; justify-content: center; }
     .app-container {
-      max-width: 1400px; width: 100%; background: white; border-radius: 28px;
+      max-width: 1450px; width: 100%; background: white; border-radius: 28px;
       padding: 28px 30px; box-shadow: 0 20px 40px rgba(0,20,50,0.12);
     }
     h1 { font-weight: 600; font-size: 2rem; color: #0b2b4a; margin: 0 0 8px 0; letter-spacing: -0.5px; }
@@ -41,7 +41,7 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.03); border: 1px solid #e3ecf5;
       margin: 18px 0 16px 0; position: relative;
     }
-    .chart-wrapper { position: relative; height: 360px; width: 100%; }
+    .chart-wrapper { position: relative; height: 380px; width: 100%; }
     .advanced-editor {
       background: #f2f8ff; border-radius: 30px; padding: 16px 24px;
       display: flex; flex-wrap: wrap; align-items: center; gap: 18px 30px;
@@ -50,6 +50,7 @@
     .advanced-editor label { display: flex; align-items: center; gap: 8px; font-weight: 500; color: #1e3f5c; }
     .advanced-editor input[type="color"] { width: 38px; height: 38px; border: 0; padding: 0; border-radius: 30px; cursor: pointer; background: none; }
     .advanced-editor input[type="range"] { width: 100px; cursor: pointer; }
+    .advanced-editor input[type="text"] { padding: 6px 12px; border-radius: 30px; border: 1px solid #cbdae9; width: 130px; }
     .btn-sm {
       background: #e6eef9; border: none; padding: 6px 18px; border-radius: 40px;
       font-weight: 500; color: #1f5680; cursor: pointer; transition: 0.15s;
@@ -61,9 +62,16 @@
       font-size: 0.95rem; color: #1c3d5a;
     }
     .descriptive-box strong { color: #0a2a44; }
-    .row-cols { display: flex; flex-wrap: wrap; gap: 12px; }
     .badge { background: #dce6f2; padding: 4px 14px; border-radius: 40px; font-size: 0.8rem; }
     .footer-note { margin-top: 24px; font-size: 0.85rem; color: #587b99; text-align: right; border-top: 1px solid #dfeaf5; padding-top: 14px; }
+    .export-btn {
+      background: #1f5f8e; color: white; border: none; padding: 8px 26px;
+      border-radius: 40px; font-weight: 500; cursor: pointer; transition: 0.2s;
+    }
+    .export-btn:hover { background: #13416b; }
+    .inline-group { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .title-group { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; background: #eaf2fb; padding: 8px 18px; border-radius: 40px; }
+    .title-group label { font-size: 0.9rem; }
     @media (max-width: 700px) { .app-container { padding: 16px; } }
   </style>
 </head>
@@ -71,9 +79,9 @@
 <div class="app-container">
   <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
     <h1>📊 MHMDataAnalysis&Visualize <small>Excel · multi‑variable</small></h1>
-    <span class="badge">v1.0</span>
+    <span class="badge">v2.1</span>
   </div>
-  <div class="subhead">Upload .xlsx · choose analysis &amp; graph type · overlay &amp; edit</div>
+  <div class="subhead">Upload .xlsx · choose analysis &amp; graph · add titles with size &amp; color</div>
 
   <!-- upload -->
   <div class="flex-row">
@@ -83,9 +91,12 @@
       <label for="fileInput" class="file-label" id="uploadLabel">Choose file</label>
       <span class="file-status" id="fileStatus">no file loaded</span>
     </div>
+    <div class="inline-group">
+      <button class="export-btn" id="exportReportBtn">📄 Export report</button>
+    </div>
   </div>
 
-  <!-- dropdowns: analysis type + graph type -->
+  <!-- dropdowns: analysis + graph + apply -->
   <div class="controls">
     <div>
       <label>🔍 Analysis <select id="analysisType">
@@ -106,20 +117,26 @@
       </select></label>
     </div>
     <div>
-      <button class="btn-sm" id="overlayBtn">🔁 Overlay graph</button>
-      <button class="btn-sm" id="resetBtn">↺ Reset chart</button>
+      <button class="btn-sm" id="applyGraphBtn">✅ Apply graph</button>
+      <button class="btn-sm" id="overlayBtn">🔁 Overlay</button>
+      <button class="btn-sm" id="resetBtn">↺ Reset</button>
     </div>
   </div>
 
-  <!-- chart + advanced editing -->
+  <!-- chart + advanced editing + title controls -->
   <div class="graph-container">
     <div class="chart-wrapper">
       <canvas id="myChart"></canvas>
     </div>
     <div class="advanced-editor">
+      <div class="title-group">
+        <label>📝 Title <input type="text" id="chartTitle" value="MHM Chart" placeholder="Chart title"></label>
+        <label>Size <input type="range" id="titleSize" min="10" max="32" value="18" style="width:80px;"></label>
+        <label>Color <input type="color" id="titleColor" value="#0b2b4a"></label>
+      </div>
       <label>🎨 Color <input type="color" id="colorPicker" value="#2a7de1"></label>
-      <label>📏 Border width <input type="range" id="borderWidth" min="0.5" max="6" step="0.5" value="2.5"></label>
-      <label>🔘 Point radius <input type="range" id="pointRadius" min="1" max="10" step="0.5" value="4"></label>
+      <label>📏 Border <input type="range" id="borderWidth" min="0.5" max="6" step="0.5" value="2.5" style="width:80px;"></label>
+      <label>🔘 Point <input type="range" id="pointRadius" min="1" max="10" step="0.5" value="4" style="width:80px;"></label>
       <label><input type="checkbox" id="fillToggle" checked> Fill</label>
       <button class="btn-sm" id="applyStyleBtn">Apply style</button>
     </div>
@@ -129,17 +146,19 @@
   <div class="descriptive-box" id="descriptiveBox">
     <strong>📋 Descriptive analysis</strong> <span id="descText">Load data to see statistics &amp; relations.</span>
   </div>
-  <div class="footer-note">MHM Data Analysis · drag &amp; drop not needed · overlay works with current data</div>
+  <div class="footer-note">MHM Data Analysis · use "Apply graph" to change chart type · titles are added to chart</div>
 </div>
 
 <script>
   (function() {
     // ---------- state ----------
-    let workbookData = null;           // parsed rows (array of objects)
+    let workbookData = null;
     let headers = [];
     let chartInstance = null;
-    let overlayChart = null;          // second chart instance for overlay
+    let overlayChart = null;
     let overlayActive = false;
+    let currentAnalysis = 'bi';
+    let currentGraph = 'bar';
 
     // DOM refs
     const fileInput = document.getElementById('fileInput');
@@ -151,14 +170,18 @@
     const pointRadius = document.getElementById('pointRadius');
     const fillToggle = document.getElementById('fillToggle');
     const applyStyleBtn = document.getElementById('applyStyleBtn');
+    const applyGraphBtn = document.getElementById('applyGraphBtn');
     const overlayBtn = document.getElementById('overlayBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const exportReportBtn = document.getElementById('exportReportBtn');
     const descText = document.getElementById('descText');
+    const chartTitleInput = document.getElementById('chartTitle');
+    const titleSizeInput = document.getElementById('titleSize');
+    const titleColorInput = document.getElementById('titleColor');
     const ctx = document.getElementById('myChart').getContext('2d');
 
     // ---------- helpers ----------
     function getNumericColumns(data, headers) {
-      // return columns that are numeric (at least 60% numeric)
       const numericCols = [];
       for (let h of headers) {
         let values = data.map(row => parseFloat(row[h])).filter(v => !isNaN(v));
@@ -168,40 +191,54 @@
     }
 
     function getSampleData(data, headers, limit = 200) {
-      // limit rows for performance
-      const slice = data.slice(0, limit);
-      return slice;
+      return data.slice(0, limit);
     }
 
-    // ---------- build chart ----------
+    // ---------- build chart config with title ----------
     function buildChart(analysis, graph, data, headers, color, borderW, pointR, fill, isOverlay = false) {
       if (!data || data.length === 0) return null;
       const numericCols = getNumericColumns(data, headers);
       if (numericCols.length === 0) {
-        descText.innerText = '⚠️ No numeric columns found. Please check your data.';
+        descText.innerText = '⚠️ No numeric columns found.';
         return null;
       }
 
-      let labels = [];
-      let datasets = [];
       let selectedCols = [];
-
-      // choose columns based on analysis type
       if (analysis === 'single') {
         selectedCols = [numericCols[0]];
       } else if (analysis === 'bi') {
         selectedCols = numericCols.slice(0, 2);
         if (selectedCols.length < 2) selectedCols = numericCols.slice(0, 1);
-      } else { // multi
+      } else {
         selectedCols = numericCols.slice(0, Math.min(4, numericCols.length));
         if (selectedCols.length === 0) selectedCols = [numericCols[0]];
       }
 
-      // build labels: for single or bi, use first column as x if possible, else index
       const sample = getSampleData(data, headers);
       if (sample.length === 0) return null;
 
-      // for scatter we need x/y numeric
+      // Title settings
+      const titleText = chartTitleInput.value || 'MHM Chart';
+      const titleSize = parseInt(titleSizeInput.value) || 18;
+      const titleColor = titleColorInput.value || '#0b2b4a';
+
+      // common options with title
+      const commonOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          title: {
+            display: true,
+            text: titleText,
+            font: { size: titleSize, weight: 'bold' },
+            color: titleColor,
+            padding: { bottom: 12 }
+          }
+        }
+      };
+
+      // Scatter
       if (graph === 'scatter' && selectedCols.length >= 2) {
         const xCol = selectedCols[0];
         const yCol = selectedCols[1];
@@ -221,13 +258,12 @@
               fill: false,
             }]
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+          options: commonOpts
         };
       }
 
-      // for other charts: use first selected col as label (if string) or index
+      // labels
       let useLabels = sample.map((row, i) => {
-        // try to use first column as label if it's not numeric
         const firstCol = headers[0];
         const val = row[firstCol];
         if (typeof val === 'string' || val instanceof String) return val;
@@ -235,7 +271,6 @@
         return `#${i+1}`;
       });
 
-      // if first col is numeric and we have >= 2 cols, use first numeric as x labels 
       const firstNum = selectedCols[0];
       const useNumericLabels = selectedCols.length >= 2 && !isNaN(parseFloat(sample[0][firstNum]));
       if (useNumericLabels) {
@@ -243,14 +278,11 @@
         if (useLabels.length === 0) useLabels = sample.map((_, i) => `#${i+1}`);
       }
 
-      // build datasets: for each selected column (except if used as label)
       let datasetCols = selectedCols;
       if (useNumericLabels && selectedCols.length > 1) {
         datasetCols = selectedCols.slice(1);
       } else if (!useNumericLabels && selectedCols.length >= 1) {
-        // if first col used as label, remove it from datasets
         if (headers.length > 1 && !isNaN(parseFloat(sample[0][selectedCols[0]]))) {
-          // but we want to keep it as dataset if single
           if (selectedCols.length === 1) datasetCols = selectedCols;
           else datasetCols = selectedCols.slice(1);
         } else {
@@ -260,11 +292,7 @@
       if (datasetCols.length === 0) datasetCols = [selectedCols[0]];
 
       const colors = ['#2a7de1', '#e85d5d', '#2ea87a', '#e6a02e', '#8b5cf6', '#e060b0'];
-      const usedColor = color || '#2a7de1';
-
-      datasets = datasetCols.map((col, idx) => {
-        const vals = sample.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
-        // align with labels length
+      let datasets = datasetCols.map((col, idx) => {
         const dataPoints = sample.map(row => {
           const v = parseFloat(row[col]);
           return isNaN(v) ? null : v;
@@ -281,8 +309,6 @@
         };
       });
 
-      // for pie/doughnut/polar we use only first dataset
-      let chartType = graph;
       if (['pie', 'doughnut', 'polarArea'].includes(graph)) {
         if (datasets.length > 0) {
           const singleData = datasets[0].data.filter(v => v !== null);
@@ -296,36 +322,34 @@
                 borderWidth: borderW || 2,
               }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            options: commonOpts
           };
         }
         return null;
       }
 
-      // bar, line, radar
-      if (graph === 'radar') {
-        chartType = 'radar';
-      } else if (graph === 'line') {
-        chartType = 'line';
-      } else {
-        chartType = 'bar';
-      }
+      let chartType = graph;
+      if (graph === 'radar') chartType = 'radar';
+      else if (graph === 'line') chartType = 'line';
+      else chartType = 'bar';
 
       return {
         type: chartType,
         data: { labels: useLabels, datasets: datasets },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        options: commonOpts
       };
     }
 
     // ---------- render chart ----------
-    function renderChart(overlay = false) {
+    function renderChart(overlay = false, forcedGraph = null) {
       if (!workbookData || workbookData.length === 0) {
         descText.innerText = 'Please upload an Excel file first.';
         return;
       }
       const analysis = analysisType.value;
-      const graph = graphType.value;
+      const graph = forcedGraph || graphType.value;
+      currentAnalysis = analysis;
+      currentGraph = graph;
       const color = colorPicker.value;
       const borderW = parseFloat(borderWidth.value);
       const pointR = parseFloat(pointRadius.value);
@@ -337,28 +361,23 @@
         return;
       }
 
-      // destroy previous chart(s)
       if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
       if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
 
       if (overlay) {
-        // create overlay: first chart with default, second with new config (different color)
         const defaultConfig = buildChart(analysis, graph, workbookData, headers, '#b0c7e0', 2, 3, false);
         if (defaultConfig) {
           chartInstance = new Chart(ctx, defaultConfig);
         }
-        // overlay chart (second) with different color (e.g. red)
         const overlayConfig = buildChart(analysis, graph, workbookData, headers, '#e85d5d', 3, 5, false);
         if (overlayConfig && chartInstance) {
           overlayChart = new Chart(ctx, overlayConfig);
           overlayActive = true;
-          // merge datasets
           if (overlayChart.data.datasets) {
             overlayChart.data.datasets.forEach(ds => { ds.borderColor = '#d94f4f'; ds.backgroundColor = '#d94f4f40'; });
             overlayChart.update();
           }
         } else {
-          // if overlay fails, render normal
           renderChart(false);
           overlayActive = false;
           return;
@@ -367,8 +386,6 @@
         chartInstance = new Chart(ctx, chartConfig);
         overlayActive = false;
       }
-
-      // descriptive analysis
       updateDescriptive(analysis, graph);
     }
 
@@ -424,43 +441,118 @@
     });
 
     // ---------- event listeners ----------
+    applyGraphBtn.addEventListener('click', function() {
+      if (!workbookData) { alert('Load data first'); return; }
+      renderChart(overlayActive, graphType.value);
+    });
+
     analysisType.addEventListener('change', () => renderChart(overlayActive));
-    graphType.addEventListener('change', () => renderChart(overlayActive));
+    
+    // Title controls: update chart when title, size or color changes (with debounce)
+    function updateTitle() {
+      if (chartInstance) {
+        const title = chartTitleInput.value || 'MHM Chart';
+        const size = parseInt(titleSizeInput.value) || 18;
+        const color = titleColorInput.value || '#0b2b4a';
+        if (chartInstance.options.plugins.title) {
+          chartInstance.options.plugins.title.text = title;
+          chartInstance.options.plugins.title.font.size = size;
+          chartInstance.options.plugins.title.color = color;
+          chartInstance.update();
+        }
+      }
+    }
+    chartTitleInput.addEventListener('input', updateTitle);
+    titleSizeInput.addEventListener('input', updateTitle);
+    titleColorInput.addEventListener('input', updateTitle);
 
     applyStyleBtn.addEventListener('click', () => {
-      renderChart(overlayActive);
+      renderChart(overlayActive, currentGraph);
     });
 
     overlayBtn.addEventListener('click', function() {
       if (!workbookData) { alert('Load data first'); return; }
       overlayActive = !overlayActive;
-      renderChart(overlayActive);
+      renderChart(overlayActive, currentGraph);
     });
 
     resetBtn.addEventListener('click', function() {
       if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
       if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
       overlayActive = false;
-      renderChart(false);
+      renderChart(false, currentGraph);
     });
 
-    // initial demo data (embedded small sample)
+    // ---------- EXPORT report ----------
+    exportReportBtn.addEventListener('click', function() {
+      if (!workbookData || workbookData.length === 0) {
+        alert('No data loaded. Please upload an Excel file first.');
+        return;
+      }
+      const canvas = document.getElementById('myChart');
+      const chartImage = canvas.toDataURL('image/png');
+      const desc = document.getElementById('descText').innerText;
+      const analysis = currentAnalysis;
+      const graph = currentGraph;
+      const rows = workbookData.length;
+      const cols = headers.length;
+      const titleText = chartTitleInput.value || 'MHM Chart';
+
+      const reportHtml = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>MHM Report</title>
+<style>body{font-family:system-ui;background:#f4f7fc;padding:30px;max-width:1000px;margin:auto;}
+h1{color:#0b2b4a;} .card{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 20px rgba(0,0,0,0.06);margin:20px 0;}
+img{max-width:100%;border-radius:16px;border:1px solid #e3ecf5;}
+.stats{display:flex;gap:20px;flex-wrap:wrap;} .stat{background:#f8faff;padding:10px 20px;border-radius:30px;}
+table{border-collapse:collapse;width:100%;font-size:0.9rem;} th,td{border:1px solid #dde6f0;padding:8px;text-align:left;}
+</style>
+</head>
+<body>
+<h1>📊 MHMDataAnalysis&Visualize — Report</h1>
+<div class="card">
+  <p><strong>Title:</strong> ${titleText} &nbsp;|&nbsp; <strong>Analysis:</strong> ${analysis} &nbsp;|&nbsp; <strong>Graph:</strong> ${graph} &nbsp;|&nbsp; <strong>Rows:</strong> ${rows} &nbsp;|&nbsp; <strong>Columns:</strong> ${cols}</p>
+  <div class="stats"><span class="stat">📋 ${desc}</span></div>
+</div>
+<div class="card"><h3>📈 Chart</h3><img src="${chartImage}" alt="Chart" /></div>
+<div class="card">
+  <h3>📌 Data preview (first 10 rows)</h3>
+  <table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${workbookData.slice(0,10).map(row => `<tr>${headers.map(h => `<td>${row[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>
+  <p style="margin-top:10px;color:#3a6b8f;">${workbookData.length > 10 ? '... and more rows' : ''}</p>
+</div>
+<div class="card" style="text-align:center;color:#587b99;"><p>Generated by MHMDataAnalysis&Visualize · ${new Date().toLocaleString()}</p></div>
+</body>
+</html>
+      `;
+      const blob = new Blob([reportHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `MHM_report_${new Date().toISOString().slice(0,10)}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // ---------- load demo data ----------
     function loadDemoData() {
       const demo = [
         { 'Region': 'North', 'Sales': 320, 'Profit': 45, 'Customers': 120 },
         { 'Region': 'South', 'Sales': 280, 'Profit': 38, 'Customers': 95 },
         { 'Region': 'East', 'Sales': 410, 'Profit': 62, 'Customers': 150 },
         { 'Region': 'West', 'Sales': 190, 'Profit': 22, 'Customers': 70 },
+        { 'Region': 'Central', 'Sales': 250, 'Profit': 30, 'Customers': 88 },
       ];
       workbookData = demo;
       headers = Object.keys(demo[0]);
       fileStatus.innerText = `📋 demo data (${demo.length} rows)`;
       renderChart(false);
     }
-    // load demo automatically
     loadDemoData();
-
-    // allow re-upload
     window.loadDemoData = loadDemoData;
   })();
 </script>
