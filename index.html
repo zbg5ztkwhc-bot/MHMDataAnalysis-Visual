@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --bg: #0F1318;
@@ -270,7 +271,46 @@
       <div class="panel-head">
         <h2>Overlay Canvas</h2>
         <div class="tools">
+          <button class="btn small ghost" id="toggleFilterBtn">Filter &amp; rank</button>
           <button class="btn small ghost" id="toggleAdvBtn">Design options</button>
+          <button class="btn small ghost" id="exportPngBtn" title="Export as PNG image">Export PNG</button>
+          <button class="btn small ghost" id="exportPdfBtn" title="Export as PDF">Export PDF</button>
+          <button class="btn small ghost" id="exportHtmlBtn" title="Export as interactive HTML">Export Interactive</button>
+        </div>
+      </div>
+
+      <div id="filterBlock" style="display:none;">
+        <div id="filterPanel" class="adv-grid" style="display:none; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--line);">
+          <div class="field">
+            <small>Sort / rank categories</small>
+            <select id="cvSortBy">
+              <option value="none">Original order</option>
+              <option value="value-desc">Value — highest first</option>
+              <option value="value-asc">Value — lowest first</option>
+              <option value="label-asc">Label — A → Z</option>
+              <option value="label-desc">Label — Z → A</option>
+            </select>
+          </div>
+          <div class="field">
+            <small>Show top N categories</small>
+            <input type="number" id="cvTopN" min="1" placeholder="All">
+          </div>
+          <div class="field">
+            <small>Minimum value filter</small>
+            <input type="number" id="cvMinValue" placeholder="No minimum">
+          </div>
+          <div class="field">
+            <small>Search / filter by label</small>
+            <input type="text" id="cvSearch" placeholder="Type to filter...">
+          </div>
+          <div class="field">
+            <small>&nbsp;</small>
+            <button class="btn small ghost" id="cvReset">Reset filters</button>
+          </div>
+          <div class="field">
+            <small>&nbsp;</small>
+            <span class="hint" id="cvCount"></span>
+          </div>
         </div>
       </div>
 
@@ -363,6 +403,7 @@ const state = {
   chartMode: null,
   chartXScale: null,
   stackedMode: false,
+  horizontalMode: false,
   seriesCounter: 0,
   seriesList: [],
   palette: ['#4FD1C5','#F2A65A','#9F8CE5','#E5697A','#7FB3E8','#C6E86B','#E88CC8','#6BE8A8']
@@ -560,34 +601,47 @@ function currentVarTypes() {
 const GRAPH_OPTIONS = {
   'single-numeric': [
     { v:'histogram', l:'Histogram (distribution)' },
+    { v:'horizontal-histogram', l:'Histogram (horizontal bars)' },
     { v:'line-index', l:'Line — value by row order' },
+    { v:'step-line', l:'Step line by row order' },
+    { v:'area', l:'Area chart (filled line by row)' },
     { v:'range', l:'Range chart (min · median · max)' },
     { v:'cumulative', l:'Cumulative line' }
   ],
   'single-categorical': [
     { v:'bar-freq', l:'Bar — frequency count' },
+    { v:'bar-freq-h', l:'Bar — frequency count (horizontal)' },
     { v:'pie', l:'Pie chart' },
-    { v:'doughnut', l:'Doughnut chart' }
+    { v:'doughnut', l:'Doughnut chart' },
+    { v:'polar-area', l:'Polar area chart' }
   ],
   'bi-num-num': [
     { v:'scatter', l:'Scatter plot' },
     { v:'line-xy', l:'Line — A ordered by X' },
+    { v:'step-xy', l:'Step line ordered by X' },
+    { v:'area-xy', l:'Area chart — filled, ordered by X' },
     { v:'bubble-density', l:'Scatter with trend line' }
   ],
   'bi-cat-num': [
     { v:'bar-mean', l:'Bar — mean of numeric by category' },
+    { v:'bar-mean-h', l:'Bar — mean by category (horizontal)' },
+    { v:'polar-area-mean', l:'Polar area — mean by category' },
     { v:'range-cat', l:'Range chart by category (min · median · max)' },
     { v:'box-approx', l:'Box-style spread by category' }
   ],
   'bi-cat-cat': [
     { v:'stacked-crosstab', l:'Stacked bar — cross-tabulation' },
+    { v:'stacked-crosstab-h', l:'Stacked bar — cross-tab (horizontal)' },
     { v:'grouped-crosstab', l:'Grouped bar — cross-tabulation' }
   ],
   'multi': [
     { v:'multi-line', l:'Multi-line — values by row order' },
+    { v:'stacked-area-multi', l:'Stacked area — multi variable' },
     { v:'grouped-bar-means', l:'Grouped bar — mean comparison' },
+    { v:'grouped-bar-means-h', l:'Grouped bar — mean comparison (horizontal)' },
+    { v:'stacked-bar-means', l:'Stacked bar — mean comparison' },
     { v:'radar-means', l:'Radar — mean comparison' },
-    { v:'stacked-bar-means', l:'Stacked bar — mean comparison' }
+    { v:'polar-area-means', l:'Polar area — mean comparison' }
   ]
 };
 
@@ -688,12 +742,16 @@ function resetSeries(){
   state.seriesList = [];
   state.seriesCounter = 0;
   if (state.chart) { state.chart.destroy(); state.chart = null; }
-  state.chartMode = null; state.chartXScale = null;
+  state.chartMode = null; state.chartXScale = null; state.stackedMode = false; state.horizontalMode = false;
+  state.masterLabels = [];
   $('datasetList').innerHTML = '';
   $('statsContent').innerHTML = '';
   $('statsPanel').style.display = 'none';
   $('chartEmpty').style.display = 'flex';
   $('statSeries').textContent = '0';
+  $('filterBlock').style.display = 'none';
+  $('cvSortBy').value = 'none'; $('cvTopN').value = ''; $('cvMinValue').value = ''; $('cvSearch').value = '';
+  $('cvCount').textContent = '';
 }
 
 function advOpts(){
@@ -724,6 +782,7 @@ function buildChartOptions(mode, xScale){
     }
   };
   if (mode === 'cartesian') {
+    options.indexAxis = state.horizontalMode ? 'y' : 'x';
     options.scales = {
       x: { type: xScale === 'linear' ? 'linear' : 'category',
            title: { display: !!o.xLabel, text: o.xLabel, color:'#8B95A5' },
@@ -735,7 +794,7 @@ function buildChartOptions(mode, xScale){
            stacked: !!state.stackedMode },
     };
     if (state.stackedMode) options.scales.x.stacked = true;
-  } else if (mode === 'radar') {
+  } else if (mode === 'radar' || mode === 'polar') {
     options.scales = { r: { grid:{ display:o.grid, color:'rgba(255,255,255,0.08)' }, angleLines:{color:'rgba(255,255,255,0.08)'},
                              pointLabels:{ color:'#8B95A5', font:{family:"'IBM Plex Mono', monospace", size:10.5} },
                              ticks:{ color:'#5B6472', backdropColor:'transparent' } } };
@@ -767,7 +826,7 @@ function buildSeries(vt, graphType) {
   const mk = (over) => Object.assign({ kind:'bar' }, over);
 
   // ---------- single numeric ----------
-  if (graphType === 'histogram') {
+  if (graphType === 'histogram' || graphType === 'horizontal-histogram') {
     const vals = colValues(vt.a, true);
     if (vals.length < 2) { alert('Not enough numeric values to build a histogram.'); return null; }
     const k = Math.max(4, Math.ceil(Math.log2(vals.length) + 1));
@@ -776,16 +835,18 @@ function buildSeries(vt, graphType) {
     vals.forEach(v => { let i = Math.floor((v - mn) / w); if (i >= k) i = k - 1; if (i < 0) i = 0; bins[i]++; });
     const labels = Array.from({ length:k }, (_, i) => `${fmtNum(mn + i*w)}–${fmtNum(mn + (i+1)*w)}`);
     const catMap = Object.fromEntries(labels.map((l,i) => [l, bins[i]]));
-    return { mode:'cartesian', xScale:'category', labels,
+    return { mode:'cartesian', xScale:'category', labels, horizontal: graphType === 'horizontal-histogram',
       datasets:[ mk({ label:`${vt.a} — histogram`, data:bins, catMap, kind:'bar' }) ],
       desc: describeSingleNumeric(vt.a, vals, 'distribution across bins') };
   }
-  if (graphType === 'line-index') {
+  if (graphType === 'line-index' || graphType === 'step-line' || graphType === 'area') {
     const vals = colValues(vt.a, true);
     const labels = vals.map((_,i) => String(i+1));
     const catMap = Object.fromEntries(labels.map((l,i) => [l, vals[i]]));
+    const kind = graphType === 'step-line' ? 'step' : (graphType === 'area' ? 'area' : 'line');
+    const suffix = graphType === 'step-line' ? '— step by row' : (graphType === 'area' ? '— area by row' : '— by row');
     return { mode:'cartesian', xScale:'category', labels,
-      datasets:[ mk({ label:`${vt.a} — by row`, data:vals.slice(), catMap, kind:'line' }) ],
+      datasets:[ mk({ label:`${vt.a} ${suffix}`, data:vals.slice(), catMap, kind }) ],
       desc: describeSingleNumeric(vt.a, vals, 'trend across rows') };
   }
   if (graphType === 'range') {
@@ -812,20 +873,23 @@ function buildSeries(vt, graphType) {
   }
 
   // ---------- single categorical ----------
-  if (graphType === 'bar-freq') {
+  if (graphType === 'bar-freq' || graphType === 'bar-freq-h') {
     const vals = state.rows.map(r=>r[vt.a]).filter(v=>v!==null&&v!==undefined&&v!=='').map(String);
     const freq = frequencyTable(vals);
     const labels = freq.map(f=>f[0]);
     const catMap = Object.fromEntries(freq);
-    return { mode:'cartesian', xScale:'category', labels,
+    return { mode:'cartesian', xScale:'category', labels, horizontal: graphType === 'bar-freq-h',
       datasets:[ mk({ label:`${vt.a} — count`, data:freq.map(f=>f[1]), catMap, kind:'bar' }) ],
       desc: describeSingleCategorical(vt.a, freq, vals.length) };
   }
-  if (graphType === 'pie' || graphType === 'doughnut') {
+  if (graphType === 'pie' || graphType === 'doughnut' || graphType === 'polar-area') {
     const vals = state.rows.map(r=>r[vt.a]).filter(v=>v!==null&&v!==undefined&&v!=='').map(String);
     const freq = frequencyTable(vals);
-    return { mode:'pie', chartTypeHint: graphType, labels: freq.map(f=>f[0]),
-      datasets:[ mk({ label:vt.a, data:freq.map(f=>f[1]), kind:'pie' }) ],
+    const mode = graphType === 'polar-area' ? 'polar' : 'pie';
+    const labels = freq.map(f=>f[0]);
+    const catMap = Object.fromEntries(freq);
+    return { mode, chartTypeHint: graphType, labels,
+      datasets:[ mk({ label:vt.a, data:freq.map(f=>f[1]), catMap, kind:'pie' }) ],
       desc: describeSingleCategorical(vt.a, freq, vals.length) };
   }
 
@@ -844,24 +908,30 @@ function buildSeries(vt, graphType) {
     return { mode:'cartesian', xScale:'linear', labels:null, datasets,
       desc: describeBivariateNumeric(vt.a, vt.b, xs.slice(0,n), ys.slice(0,n)) };
   }
-  if (graphType === 'line-xy') {
+  if (graphType === 'line-xy' || graphType === 'step-xy' || graphType === 'area-xy') {
     const xs = colValues(vt.a, true), ys = colValues(vt.b, true);
     const n = Math.min(xs.length, ys.length);
     let pts = Array.from({length:n}, (_,i) => ({x:xs[i], y:ys[i]})).sort((p,q)=>p.x-q.x);
     if (!n) { alert('No overlapping numeric rows for these two variables.'); return null; }
+    const kind = graphType === 'step-xy' ? 'step-xy' : (graphType === 'area-xy' ? 'area-xy' : 'line-xy');
     return { mode:'cartesian', xScale:'linear', labels:null,
-      datasets:[ mk({ label:`${vt.a} → ${vt.b}`, data:pts, kind:'line-xy' }) ],
+      datasets:[ mk({ label:`${vt.a} → ${vt.b}`, data:pts, kind }) ],
       desc: describeBivariateNumeric(vt.a, vt.b, xs.slice(0,n), ys.slice(0,n)) };
   }
 
   // ---------- bivariate categorical-numeric ----------
-  if (graphType === 'bar-mean') {
+  if (graphType === 'bar-mean' || graphType === 'bar-mean-h' || graphType === 'polar-area-mean') {
     const g = groupBy(vt.a, vt.b);
     const labels = Object.keys(g);
     if (!labels.length) { alert('No matching rows found for this pairing.'); return null; }
     const data = labels.map(l => mean(g[l]));
     const catMap = Object.fromEntries(labels.map((l,i)=>[l,data[i]]));
-    return { mode:'cartesian', xScale:'category', labels,
+    if (graphType === 'polar-area-mean') {
+      return { mode:'polar', chartTypeHint:'polarArea', labels,
+        datasets:[ mk({ label:`mean(${vt.b}) by ${vt.a}`, data, catMap, kind:'pie' }) ],
+        desc: describeCatNum(vt.a, vt.b, g) };
+    }
+    return { mode:'cartesian', xScale:'category', labels, horizontal: graphType === 'bar-mean-h',
       datasets:[ mk({ label:`mean(${vt.b}) by ${vt.a}`, data, catMap, kind:'bar' }) ],
       desc: describeCatNum(vt.a, vt.b, g) };
   }
@@ -887,51 +957,55 @@ function buildSeries(vt, graphType) {
   }
 
   // ---------- bivariate categorical-categorical ----------
-  if (graphType === 'stacked-crosstab' || graphType === 'grouped-crosstab') {
+  if (graphType === 'stacked-crosstab' || graphType === 'stacked-crosstab-h' || graphType === 'grouped-crosstab') {
     const { counts, valuesB } = crosstabCounts(vt.a, vt.b);
     const labels = Object.keys(counts);
     if (!labels.length) { alert('No matching rows found for this pairing.'); return null; }
-    state.stackedMode = graphType === 'stacked-crosstab';
+    state.stackedMode = graphType !== 'grouped-crosstab';
     const datasets = valuesB.slice(0,10).map(b => {
       const data = labels.map(a => (counts[a] && counts[a][b]) || 0);
       return mk({ label:`${vt.b}: ${b}`, data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind:'bar' });
     });
-    return { mode:'cartesian', xScale:'category', labels, datasets,
+    return { mode:'cartesian', xScale:'category', labels, datasets, horizontal: graphType === 'stacked-crosstab-h',
       desc: describeCrosstab(vt.a, vt.b, counts, labels, valuesB) };
   }
 
   // ---------- multivariate ----------
-  if (graphType === 'multi-line') {
+  if (graphType === 'multi-line' || graphType === 'stacked-area-multi') {
     if (vt.vars.length < 2) { alert('Select at least two numeric variables.'); return null; }
     const maxLen = Math.max(...vt.vars.map(v => colValues(v,true).length));
     const labels = Array.from({length:maxLen}, (_,i)=>String(i+1));
+    const kind = graphType === 'stacked-area-multi' ? 'area' : 'line';
+    if (graphType === 'stacked-area-multi') state.stackedMode = true;
     const datasets = vt.vars.map(v => {
       const vals = colValues(v,true);
       const catMap = Object.fromEntries(labels.map((l,i)=>[l, i<vals.length?vals[i]:null]));
-      return mk({ label:v, data:labels.map(l=>catMap[l]), catMap, kind:'line' });
+      return mk({ label:v, data:labels.map(l=>catMap[l]), catMap, kind });
     });
     return { mode:'cartesian', xScale:'category', labels, datasets, desc: describeMulti(vt.vars) };
   }
-  if (graphType === 'grouped-bar-means' || graphType === 'stacked-bar-means' || graphType === 'radar-means') {
+  if (graphType === 'grouped-bar-means' || graphType === 'grouped-bar-means-h' || graphType === 'stacked-bar-means' || graphType === 'radar-means' || graphType === 'polar-area-means') {
     if (vt.vars.length < 2) { alert('Select at least two numeric variables.'); return null; }
     const labels = vt.vars.slice();
     let datasets;
-    if (vt.group) {
+    if (vt.group && graphType !== 'polar-area-means') {
       const groupVals = [...new Set(state.rows.map(r=>r[vt.group]).filter(v=>v!==null&&v!==undefined&&v!==''))].map(String).slice(0,8);
       datasets = groupVals.map(gv => {
         const data = vt.vars.map(v => {
           const vals = state.rows.filter(r => String(r[vt.group]) === gv).map(r => Number(r[v])).filter(n=>!isNaN(n));
           return vals.length ? mean(vals) : null;
         });
-        return mk({ label:`${vt.group}: ${gv}`, data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind:'bar' });
+        return mk({ label:`${vt.group}: ${gv}`, data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind: graphType === 'radar-means' ? 'radarline' : 'bar' });
       });
     } else {
       const data = vt.vars.map(v => mean(colValues(v,true)));
-      datasets = [ mk({ label:'Mean value', data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind:'bar' }) ];
+      datasets = [ mk({ label:'Mean value', data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind: graphType === 'radar-means' ? 'radarline' : (graphType === 'polar-area-means' ? 'pie' : 'bar') }) ];
     }
     if (graphType === 'stacked-bar-means') state.stackedMode = true;
-    const mode = graphType === 'radar-means' ? 'radar' : 'cartesian';
-    return { mode, xScale:'category', labels, datasets, desc: describeMulti(vt.vars, vt.group) };
+    const mode = graphType === 'radar-means' ? 'radar' : (graphType === 'polar-area-means' ? 'polar' : 'cartesian');
+    return { mode, xScale:'category', labels, datasets, horizontal: graphType === 'grouped-bar-means-h',
+      chartTypeHint: graphType === 'polar-area-means' ? 'polarArea' : undefined,
+      desc: describeMulti(vt.vars, vt.group) };
   }
 
   return null;
@@ -1036,6 +1110,34 @@ function styleDataset(ds, color, o) {
       ds.borderWidth = o.borderWidth; ds.tension = o.tension; ds.fill = o.fill;
       ds.pointRadius = o.pointRadius; ds.pointBackgroundColor = color; ds.showLine = true;
       break;
+    case 'area':
+      ds.type = 'line';
+      ds.backgroundColor = hexToRgba(color, Math.max(o.opacity, 35));
+      ds.borderWidth = o.borderWidth; ds.tension = o.tension; ds.fill = true;
+      ds.pointRadius = Math.min(o.pointRadius, 3); ds.pointBackgroundColor = color;
+      break;
+    case 'area-xy':
+      ds.type = 'line';
+      ds.backgroundColor = hexToRgba(color, Math.max(o.opacity, 35));
+      ds.borderWidth = o.borderWidth; ds.tension = o.tension; ds.fill = true;
+      ds.pointRadius = Math.min(o.pointRadius, 3); ds.pointBackgroundColor = color; ds.showLine = true;
+      break;
+    case 'step':
+      ds.type = 'line'; ds.stepped = true;
+      ds.backgroundColor = hexToRgba(color, o.fill ? o.opacity * 0.5 : 0);
+      ds.borderWidth = o.borderWidth; ds.fill = o.fill;
+      ds.pointRadius = o.pointRadius; ds.pointBackgroundColor = color;
+      break;
+    case 'step-xy':
+      ds.type = 'line'; ds.stepped = true;
+      ds.backgroundColor = hexToRgba(color, o.fill ? o.opacity * 0.5 : 0);
+      ds.borderWidth = o.borderWidth; ds.fill = o.fill;
+      ds.pointRadius = o.pointRadius; ds.pointBackgroundColor = color; ds.showLine = true;
+      break;
+    case 'radarline':
+      ds.backgroundColor = hexToRgba(color, o.opacity * 0.4);
+      ds.borderWidth = o.borderWidth; ds.pointRadius = o.pointRadius; ds.pointBackgroundColor = color;
+      break;
     case 'scatter':
       ds.type = 'scatter';
       ds.backgroundColor = hexToRgba(color, Math.min(100, o.opacity + 25));
@@ -1055,7 +1157,7 @@ function styleDataset(ds, color, o) {
 
 function createChart(mode, xScale, pieHint) {
   const ctx = $('mainChart').getContext('2d');
-  const baseType = mode === 'pie' ? (pieHint || 'pie') : (mode === 'radar' ? 'radar' : (xScale === 'linear' ? 'scatter' : 'bar'));
+  const baseType = mode === 'pie' ? (pieHint || 'pie') : (mode === 'polar' ? 'polarArea' : (mode === 'radar' ? 'radar' : (xScale === 'linear' ? 'scatter' : 'bar')));
   state.chart = new Chart(ctx, {
     type: baseType,
     data: { labels: [], datasets: [] },
@@ -1065,14 +1167,79 @@ function createChart(mode, xScale, pieHint) {
 
 function mergeLabels(newLabels) {
   if (!newLabels) return;
-  const cur = state.chart.data.labels || [];
-  const merged = cur.slice();
-  newLabels.forEach(l => { if (!merged.includes(l)) merged.push(l); });
-  state.chart.data.labels = merged;
-  state.chart.data.datasets.forEach(ds => {
-    if (ds._catMap) ds.data = merged.map(l => (l in ds._catMap) ? ds._catMap[l] : null);
-  });
+  state.masterLabels = state.masterLabels || [];
+  newLabels.forEach(l => { if (!state.masterLabels.includes(l)) state.masterLabels.push(l); });
+  renderCanvasView();
 }
+
+function canvasFilterOpts() {
+  const topNRaw = $('cvTopN').value.trim();
+  const minRaw = $('cvMinValue').value.trim();
+  return {
+    sortBy: $('cvSortBy').value,
+    topN: topNRaw ? Math.max(1, parseInt(topNRaw, 10)) : null,
+    minValue: minRaw !== '' ? Number(minRaw) : null,
+    search: $('cvSearch').value.trim()
+  };
+}
+
+function categoryValue(label) {
+  if (!state.chart) return null;
+  let v = null;
+  state.chart.data.datasets.forEach(ds => {
+    if (ds._catMap && label in ds._catMap) {
+      const raw = ds._catMap[label];
+      const num = Array.isArray(raw) ? raw[1] : raw;
+      if (typeof num === 'number' && !isNaN(num)) v = (v || 0) + num;
+    }
+  });
+  return v;
+}
+
+function renderCanvasView() {
+  if (!state.chart || !state.masterLabels) return;
+  const supportsFilter = ['cartesian','radar','pie','polar'].includes(state.chartMode) && state.chartXScale !== 'linear';
+  $('filterBlock').style.display = supportsFilter && state.chart.data.datasets.some(d => d._catMap) ? 'block' : 'none';
+  if (!supportsFilter) return;
+
+  let labels = state.masterLabels.slice();
+  const f = canvasFilterOpts();
+
+  if (f.search) {
+    const q = f.search.toLowerCase();
+    labels = labels.filter(l => String(l).toLowerCase().includes(q));
+  }
+  if (f.minValue !== null && !isNaN(f.minValue)) {
+    labels = labels.filter(l => { const v = categoryValue(l); return v === null || v >= f.minValue; });
+  }
+  if (f.sortBy === 'value-desc') labels.sort((a,b) => (categoryValue(b) ?? -Infinity) - (categoryValue(a) ?? -Infinity));
+  else if (f.sortBy === 'value-asc') labels.sort((a,b) => (categoryValue(a) ?? Infinity) - (categoryValue(b) ?? Infinity));
+  else if (f.sortBy === 'label-asc') labels.sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric:true}));
+  else if (f.sortBy === 'label-desc') labels.sort((a,b) => String(b).localeCompare(String(a), undefined, {numeric:true}));
+  if (f.topN) labels = labels.slice(0, f.topN);
+
+  state.chart.data.labels = labels;
+  const liveOpacity = advOpts().opacity;
+  state.chart.data.datasets.forEach(ds => {
+    if (ds._catMap) ds.data = labels.map(l => (l in ds._catMap) ? ds._catMap[l] : null);
+    if (ds._pieColorMap) ds.backgroundColor = labels.map(l => hexToRgba(ds._pieColorMap[l] || '#4FD1C5', Math.max(40, liveOpacity)));
+  });
+  $('cvCount').textContent = `${labels.length} / ${state.masterLabels.length} categories shown`;
+  state.chart.update();
+}
+
+['cvSortBy','cvTopN','cvMinValue','cvSearch'].forEach(id => {
+  $(id).addEventListener('input', renderCanvasView);
+  $(id).addEventListener('change', renderCanvasView);
+});
+$('cvReset').addEventListener('click', () => {
+  $('cvSortBy').value = 'none'; $('cvTopN').value = ''; $('cvMinValue').value = ''; $('cvSearch').value = '';
+  renderCanvasView();
+});
+$('toggleFilterBtn').addEventListener('click', () => {
+  const p = $('filterPanel');
+  p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+});
 
 function addSeriesToChart() {
   const vt = currentVarTypes();
@@ -1082,12 +1249,13 @@ function addSeriesToChart() {
   const spec = buildSeries(vt, graphType);
   if (!spec) return;
 
-  if (spec.mode === 'pie' && state.chartMode === 'pie' && state.chart) {
-    clearChart(); // pie/doughnut charts hold a single ring, so a new one replaces the last
+  if ((spec.mode === 'pie' || spec.mode === 'polar') && state.chartMode === spec.mode && state.chart) {
+    clearChart(); // pie/doughnut/polar-area charts hold a single ring, so a new one replaces the last
   } else if (state.chart && (state.chartMode !== spec.mode || (spec.xScale && state.chartXScale && spec.xScale !== state.chartXScale))) {
     if (!confirm('This graph type needs a fresh canvas (different chart mode). Clear the current chart and continue?')) return;
     clearChart();
   }
+  state.horizontalMode = state.horizontalMode || !!spec.horizontal;
   if (!state.chart) createChart(spec.mode, spec.xScale, spec.chartTypeHint);
   state.chartMode = spec.mode;
   if (spec.xScale) state.chartXScale = spec.xScale;
@@ -1100,13 +1268,17 @@ function addSeriesToChart() {
     const id = groupId + '_' + i;
     ds._id = id; ds._catMap = ds.catMap || null; ds._kind = ds.kind; ds._colorHex = color;
     styleDataset(ds, color, o);
+    if (ds._kind === 'pie' && spec.labels) {
+      ds._pieColorMap = {};
+      spec.labels.forEach((l, idx) => { ds._pieColorMap[l] = state.palette[idx % state.palette.length]; });
+    }
     delete ds.catMap; delete ds.kind;
     state.chart.data.datasets.push(ds);
     addedIds.push(id);
   });
   mergeLabels(spec.labels);
-  if (state.stackedMode) applyAdvancedOptionsLive();
-  state.chart.update();
+  if (!spec.labels) state.chart.update();
+  if (state.stackedMode || spec.horizontal) applyAdvancedOptionsLive();
 
   state.seriesList.push({
     groupId, ids: addedIds,
@@ -1126,11 +1298,16 @@ function removeSeriesGroup(groupId) {
   state.seriesList = state.seriesList.filter(s => s.groupId !== groupId);
   const block = document.getElementById('desc_' + groupId);
   if (block) block.remove();
+  const rebuilt = [];
+  state.chart.data.datasets.forEach(ds => { if (ds._catMap) Object.keys(ds._catMap).forEach(l => { if (!rebuilt.includes(l)) rebuilt.push(l); }); });
+  state.masterLabels = rebuilt;
   if (!state.chart.data.datasets.length) {
     $('chartEmpty').style.display = 'flex';
     $('statsPanel').style.display = 'none';
+    $('filterBlock').style.display = 'none';
   }
-  state.chart.update();
+  renderCanvasView();
+  if (!state.masterLabels.length) state.chart.update();
   $('statSeries').textContent = state.chart.data.datasets.length;
   renderDatasetList();
 }
@@ -1202,13 +1379,17 @@ function renderStatsBlock(groupId, desc) {
 
 function clearChart() {
   if (state.chart) { state.chart.destroy(); state.chart = null; }
-  state.chartMode = null; state.chartXScale = null; state.stackedMode = false;
+  state.chartMode = null; state.chartXScale = null; state.stackedMode = false; state.horizontalMode = false;
+  state.masterLabels = [];
   state.seriesList = [];
   $('datasetList').innerHTML = '';
   $('statsContent').innerHTML = '';
   $('statsPanel').style.display = 'none';
   $('chartEmpty').style.display = 'flex';
   $('statSeries').textContent = '0';
+  $('filterBlock').style.display = 'none';
+  $('cvSortBy').value = 'none'; $('cvTopN').value = ''; $('cvMinValue').value = ''; $('cvSearch').value = '';
+  $('cvCount').textContent = '';
 }
 
 $('addSeriesBtn').addEventListener('click', addSeriesToChart);
@@ -1220,6 +1401,120 @@ $('clearChartBtn').addEventListener('click', () => { if (confirm('Clear all seri
     state.chart.data.datasets.forEach(ds => styleDataset(ds, ds._colorHex, o));
     state.chart.update();
   });
+});
+
+/* ------------------------------ Export ------------------------------ */
+
+function exportFileName(ext) {
+  const t = ($('optTitle').value || 'datalathe-chart').trim().replace(/[^a-z0-9\-_ ]/gi,'').replace(/\s+/g,'-').toLowerCase();
+  return `${t || 'chart'}.${ext}`;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+$('exportPngBtn').addEventListener('click', () => {
+  if (!state.chart) { alert('Add at least one series to the chart before exporting.'); return; }
+  const url = state.chart.toBase64Image('image/png', 1);
+  const a = document.createElement('a');
+  a.href = url; a.download = exportFileName('png');
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+$('exportPdfBtn').addEventListener('click', () => {
+  if (!state.chart) { alert('Add at least one series to the chart before exporting.'); return; }
+  const { jsPDF } = window.jspdf;
+  const canvas = $('mainChart');
+  const imgData = state.chart.toBase64Image('image/png', 1);
+  const cw = canvas.width, ch = canvas.height;
+  const landscape = cw >= ch;
+  const doc = new jsPDF({ orientation: landscape ? 'landscape' : 'portrait', unit: 'pt', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight();
+  const margin = 32;
+  const maxW = pageW - margin*2, maxH = pageH - margin*2 - 40;
+  const scale = Math.min(maxW / cw, maxH / ch);
+  const w = cw * scale, h = ch * scale;
+  const title = $('optTitle').value || 'Data Analysis Chart';
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text(title, margin, margin);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120);
+  doc.text(`Exported from MHMDataAnalysis&Visual · ${new Date().toLocaleString()}`, margin, margin + 16);
+  doc.addImage(imgData, 'PNG', margin, margin + 30, w, h);
+
+  let y = margin + 40 + h;
+  const statsEl = $('statsContent');
+  if (statsEl && statsEl.textContent.trim()) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20);
+    if (y > pageH - margin - 20) { doc.addPage(); y = margin; }
+    doc.text('Descriptive analysis', margin, y); y += 16;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60);
+    statsEl.querySelectorAll('.desc-block').forEach(block => {
+      const h3 = block.querySelector('h3'); const p = block.querySelector('p');
+      if (!h3 || !p) return;
+      if (y > pageH - margin - 40) { doc.addPage(); y = margin; }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(h3.textContent, margin, y); y += 13;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+      const lines = doc.splitTextToSize(p.textContent, pageW - margin*2);
+      doc.text(lines, margin, y); y += lines.length * 11 + 10;
+    });
+  }
+  doc.save(exportFileName('pdf'));
+});
+
+$('exportHtmlBtn').addEventListener('click', () => {
+  if (!state.chart) { alert('Add at least one series to the chart before exporting.'); return; }
+  const title = escapeHtml($('optTitle').value || 'Data Analysis Chart');
+  const configData = JSON.stringify(state.chart.config.data);
+  const configOptions = JSON.stringify(state.chart.config.options);
+  const configType = JSON.stringify(state.chart.config.type);
+  const statsHtml = $('statsContent') ? $('statsContent').innerHTML : '';
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title} — Interactive Export</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"><\/script>
+<style>
+  body{ margin:0; background:#0F1318; color:#E8EAED; font-family:'IBM Plex Sans',sans-serif; padding:28px; }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:20px; }
+  .wrap{ max-width:960px; margin:0 auto; }
+  .chart-box{ position:relative; height:440px; background:#161B22; border:1px solid #2A323C; border-radius:10px; padding:16px; }
+  .stats{ margin-top:24px; }
+  .desc-block{ border-top:1px solid #2A323C; padding-top:14px; margin-top:14px; font-size:13px; color:#8B95A5; }
+  .desc-block:first-child{ border-top:none; }
+  .desc-block h3{ color:#4FD1C5; font-family:'Space Grotesk',sans-serif; font-size:14px; margin:0 0 6px; }
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin:8px 0; }
+  .stat-card{ background:#1C2229; border:1px solid #2A323C; border-radius:6px; padding:8px 10px; }
+  .stat-card .l{ font-size:9px; text-transform:uppercase; color:#5B6472; }
+  .stat-card .v{ font-family:'IBM Plex Mono',monospace; font-size:15px; color:#E8EAED; }
+  .freq-table{ width:100%; font-size:12px; border-collapse:collapse; }
+  .freq-table td{ padding:3px 6px; border-bottom:1px dashed #2A323C; }
+  footer{ margin-top:26px; font-size:11px; color:#5B6472; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>${title}</h1>
+  <div class="chart-box"><canvas id="c"></canvas></div>
+  <div class="stats">${statsHtml}</div>
+  <footer>Exported from MHMDataAnalysis&amp;Visual — fully interactive, no server required.</footer>
+</div>
+<script>
+new Chart(document.getElementById('c').getContext('2d'), {
+  type: ${configType},
+  data: ${configData},
+  options: ${configOptions}
+});
+<\/script>
+</body>
+</html>`;
+  downloadBlob(new Blob([html], { type: 'text/html' }), exportFileName('html'));
 });
 </script>
 </body>
