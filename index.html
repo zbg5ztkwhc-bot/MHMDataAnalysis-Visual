@@ -1,756 +1,1227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MHMDataAnalysis&Visualize</title>
-  <!-- Chart.js & SheetJS (XLSX) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
-    body { background: #f4f7fc; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .app-container {
-      max-width: 1450px; width: 100%; background: white; border-radius: 28px;
-      padding: 28px 30px; box-shadow: 0 20px 40px rgba(0,20,50,0.12);
-    }
-    h1 { font-weight: 600; font-size: 2rem; color: #0b2b4a; margin: 0 0 8px 0; letter-spacing: -0.5px; }
-    h1 small { font-weight: 400; font-size: 1rem; color: #3a6b8f; margin-left: 12px; }
-    .subhead { color: #2c5778; margin-bottom: 24px; border-left: 4px solid #2a7de1; padding-left: 14px; }
-    .flex-row { display: flex; flex-wrap: wrap; gap: 18px 30px; align-items: center; margin-bottom: 22px; }
-    .upload-area {
-      background: #eef3fa; padding: 10px 20px; border-radius: 40px;
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    }
-    .upload-area label { font-weight: 500; color: #1a405e; }
-    .file-input { display: none; }
-    .file-label {
-      background: #1f5f8e; color: white; padding: 8px 22px; border-radius: 30px;
-      cursor: pointer; font-weight: 500; transition: 0.2s; border: none;
-    }
-    .file-label:hover { background: #13416b; }
-    .file-status { color: #1f4b6e; font-size: 0.9rem; }
-    .controls { display: flex; flex-wrap: wrap; gap: 16px 25px; align-items: center; background: #f8faff; padding: 14px 20px; border-radius: 40px; }
-    .controls select {
-      padding: 8px 18px 8px 14px; border-radius: 30px; border: 1px solid #cbdae9;
-      background: white; font-size: 0.95rem; min-width: 160px; cursor: pointer;
-    }
-    .controls label { font-weight: 500; color: #1a3d5a; display: flex; align-items: center; gap: 6px; }
-    .graph-container {
-      background: #ffffff; border-radius: 24px; padding: 20px 20px 12px 20px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.03); border: 1px solid #e3ecf5;
-      margin: 18px 0 16px 0; position: relative;
-    }
-    .chart-wrapper { position: relative; height: 380px; width: 100%; }
-    .advanced-editor {
-      background: #f2f8ff; border-radius: 30px; padding: 16px 24px;
-      display: flex; flex-wrap: wrap; align-items: center; gap: 18px 30px;
-      border: 1px solid #d7e4f2; margin: 12px 0 10px 0;
-    }
-    .advanced-editor label { display: flex; align-items: center; gap: 8px; font-weight: 500; color: #1e3f5c; }
-    .advanced-editor input[type="color"] { width: 38px; height: 38px; border: 0; padding: 0; border-radius: 30px; cursor: pointer; background: none; }
-    .advanced-editor input[type="range"] { width: 100px; cursor: pointer; }
-    .advanced-editor input[type="text"] { padding: 6px 12px; border-radius: 30px; border: 1px solid #cbdae9; width: 130px; }
-    .btn-sm {
-      background: #e6eef9; border: none; padding: 6px 18px; border-radius: 40px;
-      font-weight: 500; color: #1f5680; cursor: pointer; transition: 0.15s;
-    }
-    .btn-sm:hover { background: #d0e2f5; }
-    .descriptive-box {
-      background: #f7faff; border-radius: 20px; padding: 18px 24px;
-      border-left: 6px solid #2a7de1; margin: 18px 0 10px 0;
-      font-size: 0.95rem; color: #1c3d5a;
-    }
-    .descriptive-box strong { color: #0a2a44; }
-    .badge { background: #dce6f2; padding: 4px 14px; border-radius: 40px; font-size: 0.8rem; }
-    .footer-note { margin-top: 24px; font-size: 0.85rem; color: #587b99; text-align: right; border-top: 1px solid #dfeaf5; padding-top: 14px; }
-    .export-btn {
-      background: #1f5f8e; color: white; border: none; padding: 8px 26px;
-      border-radius: 40px; font-weight: 500; cursor: pointer; transition: 0.2s;
-    }
-    .export-btn:hover { background: #13416b; }
-    .inline-group { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-    .title-group { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; background: #eaf2fb; padding: 8px 18px; border-radius: 40px; }
-    .title-group label { font-size: 0.9rem; }
-    @media (max-width: 700px) { .app-container { padding: 16px; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MHMDataAnalysis&amp;Visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #0F1318;
+    --panel: #161B22;
+    --panel-2: #1C2229;
+    --line: #2A323C;
+    --text: #E8EAED;
+    --muted: #8B95A5;
+    --dim: #5B6472;
+    --cyan: #4FD1C5;
+    --cyan-dim: #2E6F69;
+    --amber: #F2A65A;
+    --red: #E5697A;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --display: 'Space Grotesk', sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--cyan-dim); color:#fff; }
+
+  /* ---------- Console Header ---------- */
+  header.console{
+    border-bottom:1px solid var(--line);
+    padding:18px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px;
+    background:
+      linear-gradient(180deg, rgba(79,209,197,0.04), transparent 60%),
+      var(--panel);
+  }
+  .brand{ display:flex; align-items:baseline; gap:12px; }
+  .brand .mark{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.18em;
+    color:var(--cyan); border:1px solid var(--cyan-dim);
+    padding:3px 7px; border-radius:3px; text-transform:uppercase;
+  }
+  .brand h1{
+    font-family:var(--display); font-size:22px; margin:0; font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .brand .sub{ font-family:var(--mono); font-size:11.5px; color:var(--dim); }
+
+  .readout{
+    display:flex; gap:22px; font-family:var(--mono); font-size:11.5px;
+  }
+  .readout .stat{ text-align:right; }
+  .readout .stat .v{ color:var(--cyan); font-size:16px; font-weight:600; display:block; line-height:1.3; }
+  .readout .stat .l{ color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; font-size:9.5px; }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid; grid-template-columns: 340px 1fr; gap:0;
+    min-height:calc(100vh - 76px);
+  }
+  @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
+
+  aside.sidebar{
+    border-right:1px solid var(--line);
+    padding:20px; display:flex; flex-direction:column; gap:22px;
+    background:var(--panel);
+  }
+  main.workspace{ padding:22px 26px; display:flex; flex-direction:column; gap:20px; }
+
+  .block{ display:flex; flex-direction:column; gap:10px; }
+  .block-title{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--muted); display:flex; align-items:center; gap:8px;
+  }
+  .block-title::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  /* Upload dropzone */
+  .dropzone{
+    border:1.5px dashed var(--line); border-radius:8px; padding:22px 14px;
+    text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
+    font-size:13px; color:var(--muted);
+  }
+  .dropzone:hover, .dropzone.drag{ border-color:var(--cyan); background:rgba(79,209,197,0.05); color:var(--text); }
+  .dropzone strong{ color:var(--text); display:block; margin-bottom:4px; font-size:13.5px; }
+  .dropzone input{ display:none; }
+  .file-tag{
+    font-family:var(--mono); font-size:11.5px; color:var(--cyan);
+    background:rgba(79,209,197,0.08); border:1px solid var(--cyan-dim);
+    border-radius:4px; padding:6px 10px; display:none; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .file-tag button{ background:none; border:none; color:var(--dim); cursor:pointer; font-size:14px; }
+
+  label.field-label{ font-size:12px; color:var(--muted); margin-bottom:4px; display:block; }
+
+  select, input[type=text], input[type=number]{
+    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-family:var(--sans); font-size:13px;
+    outline:none; transition:border-color .15s;
+  }
+  select:focus, input:focus{ border-color:var(--cyan); }
+
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:13px; border-radius:6px;
+    padding:9px 14px; border:1px solid var(--line); background:var(--panel-2); color:var(--text);
+    cursor:pointer; transition:transform .08s, border-color .15s, background .15s;
+  }
+  .btn:hover{ border-color:var(--cyan); }
+  .btn:active{ transform:scale(0.98); }
+  .btn.primary{ background:var(--cyan); border-color:var(--cyan); color:#08211E; }
+  .btn.primary:hover{ background:#5EE0D3; }
+  .btn.ghost{ background:transparent; }
+  .btn.danger{ color:var(--red); border-color:rgba(229,105,122,0.4); background:transparent; }
+  .btn.small{ padding:5px 9px; font-size:11.5px; }
+  .btn-row{ display:flex; gap:8px; }
+  .btn-row .btn{ flex:1; }
+
+  .checklist{
+    max-height:150px; overflow-y:auto; border:1px solid var(--line); border-radius:6px;
+    padding:6px; background:var(--panel-2); display:flex; flex-direction:column; gap:2px;
+  }
+  .checklist label{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; padding:5px 6px; border-radius:4px; cursor:pointer;
+  }
+  .checklist label:hover{ background:rgba(255,255,255,0.03); }
+  .checklist input{ accent-color:var(--cyan); }
+  .type-badge{
+    font-family:var(--mono); font-size:9px; padding:1px 5px; border-radius:3px; margin-left:auto;
+    text-transform:uppercase; letter-spacing:.05em;
+  }
+  .type-badge.num{ background:rgba(79,209,197,0.15); color:var(--cyan); }
+  .type-badge.cat{ background:rgba(242,166,90,0.15); color:var(--amber); }
+  .type-badge.date{ background:rgba(159,140,229,0.15); color:#9F8CE5; }
+
+  .hint{ font-size:11.5px; color:var(--dim); line-height:1.5; }
+
+  /* Panels in main */
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; }
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .panel-head h2{ font-family:var(--display); font-size:15px; margin:0; font-weight:600; }
+  .panel-head .tools{ display:flex; gap:8px; }
+
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:70px 20px; color:var(--dim); text-align:center; gap:8px;
+  }
+  .empty-state .glyph{ font-family:var(--mono); font-size:34px; color:var(--line); }
+
+  .chart-wrap{ position:relative; height:420px; }
+
+  .dataset-list{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .dataset-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line);
+    border-radius:7px; background:var(--panel-2); font-size:12.5px;
+  }
+  .dataset-item input[type=color]{
+    width:26px; height:26px; border:none; border-radius:5px; background:none; padding:0; cursor:pointer;
+  }
+  .dataset-item .name{ flex:1; font-family:var(--mono); font-size:12px; }
+  .dataset-item select{ width:auto; padding:4px 6px; font-size:11.5px; }
+
+  .adv-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:14px; }
+  .adv-grid .field{ display:flex; flex-direction:column; gap:5px; }
+  .adv-grid .field small{ color:var(--muted); font-size:11px; }
+  input[type=range]{ accent-color:var(--cyan); width:100%; }
+  .toggle-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; }
+
+  table.preview{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:11.5px; }
+  table.preview th, table.preview td{
+    border-bottom:1px solid var(--line); padding:6px 10px; text-align:left; white-space:nowrap;
+  }
+  table.preview th{ color:var(--cyan); font-weight:600; position:sticky; top:0; background:var(--panel); }
+  .table-scroll{ max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .stat-card{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+  }
+  .stat-card .l{ font-family:var(--mono); font-size:9.5px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; }
+  .stat-card .v{ font-family:var(--mono); font-size:16px; color:var(--text); margin-top:2px; font-weight:600; }
+  .desc-block{ border-top:1px solid var(--line); padding-top:14px; margin-top:14px; }
+  .desc-block:first-child{ border-top:none; padding-top:0; margin-top:0; }
+  .desc-block h3{ font-size:13px; margin:0 0 4px; font-family:var(--display); color:var(--cyan); }
+  .desc-block p{ font-size:12.5px; color:var(--muted); line-height:1.6; margin:6px 0 0; }
+  .freq-table{ width:100%; font-family:var(--mono); font-size:11.5px; margin-top:8px; border-collapse:collapse; }
+  .freq-table td{ padding:3px 6px; border-bottom:1px dashed var(--line); }
+  .freq-table td:last-child{ text-align:right; color:var(--cyan); }
+
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+</style>
 </head>
 <body>
-<div class="app-container">
-  <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
-    <h1>📊 MHMDataAnalysis&Visualize <small>Excel · 80+ chart types</small></h1>
-    <span class="badge">v2.2</span>
-  </div>
-  <div class="subhead">Upload .xlsx · choose analysis &amp; graph · add titles · export report</div>
 
-  <!-- upload -->
-  <div class="flex-row">
-    <div class="upload-area">
-      <label>📁 Upload Excel</label>
-      <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
-      <label for="fileInput" class="file-label" id="uploadLabel">Choose file</label>
-      <span class="file-status" id="fileStatus">no file loaded</span>
-    </div>
-    <div class="inline-group">
-      <button class="export-btn" id="exportReportBtn">📄 Export report</button>
+<header class="console">
+  <div class="brand">
+    <span class="mark">MHMDataAnalysis&amp;Visual</span>
+    <div>
+      <h1>Spreadsheet Analysis Console</h1>
+      <div class="sub">upload → shape → chart → interpret</div>
     </div>
   </div>
-
-  <!-- dropdowns: analysis + graph + apply -->
-  <div class="controls">
-    <div>
-      <label>🔍 Analysis <select id="analysisType">
-        <option value="single">Single variable</option>
-        <option value="bi" selected>Bi‑variable</option>
-        <option value="multi">Multiple variables</option>
-      </select></label>
-    </div>
-    <div>
-      <label>📈 Graph <select id="graphType">
-        <!-- Comparison -->
-        <optgroup label="Comparison">
-          <option value="bar">Bar chart</option>
-          <option value="column">Column chart</option>
-          <option value="groupedBar">Grouped bar chart</option>
-          <option value="lollipop">Lollipop chart</option>
-          <option value="bullet">Bullet chart</option>
-          <option value="dotPlot">Dot plot</option>
-          <option value="dumbbell">Dumbbell chart</option>
-          <option value="pictogram">Pictogram</option>
-          <option value="iconChart">Icon chart</option>
-          <option value="rangePlot">Range plot</option>
-          <option value="radialBar">Radial bar chart</option>
-          <option value="parallel">Parallel coordinates</option>
-          <option value="radar">Radar chart</option>
-          <option value="nightingale">Nightingale chart</option>
-          <option value="waterfall">Waterfall chart</option>
-          <option value="matrix">Matrix chart</option>
-          <option value="smallMultiples">Small multiples</option>
-          <option value="wordCloud">Word cloud</option>
-          <option value="slope">Slope chart</option>
-          <option value="table">Table chart</option>
-          <option value="categoricalScatter">Categorical scatter</option>
-          <option value="quadrant">Quadrant chart</option>
-        </optgroup>
-        <!-- Correlation -->
-        <optgroup label="Correlation">
-          <option value="heatmap">Heatmap</option>
-          <option value="bubble">Bubble chart</option>
-          <option value="scatter">Scatter plot</option>
-          <option value="connectedScatter">Connected scatter</option>
-          <option value="hexbin">Hexagonal binning</option>
-          <option value="contour">Contour plot</option>
-        </optgroup>
-        <!-- Part-to-whole -->
-        <optgroup label="Part-to-whole">
-          <option value="stackedBar">Stacked bar chart</option>
-          <option value="divergingBar">Diverging bar chart</option>
-          <option value="populationPyramid">Population pyramid</option>
-          <option value="iconArray">Icon array</option>
-          <option value="waffle">Waffle chart</option>
-          <option value="pie">Pie chart</option>
-          <option value="doughnut">Doughnut chart</option>
-          <option value="semicircleDonut">Semicircle donut</option>
-          <option value="marimekko">Marimekko chart</option>
-          <option value="treemap">Treemap</option>
-          <option value="circularTreemap">Circular treemap</option>
-          <option value="convexTreemap">Convex treemap</option>
-          <option value="dendrogram">Dendrogram</option>
-          <option value="venn">Venn diagram</option>
-          <option value="euler">Euler diagram</option>
-          <option value="circularGauge">Circular gauge</option>
-          <option value="sunburst">Sunburst chart</option>
-          <option value="funnel">Funnel chart</option>
-        </optgroup>
-        <!-- Data over time -->
-        <optgroup label="Data over time">
-          <option value="area">Area chart</option>
-          <option value="stackedArea">Stacked area chart</option>
-          <option value="stream">Stream graph</option>
-          <option value="bump">Bump chart</option>
-          <option value="line">Line chart</option>
-        </optgroup>
-      </select></label>
-    </div>
-    <div>
-      <button class="btn-sm" id="applyGraphBtn">✅ Apply graph</button>
-      <button class="btn-sm" id="overlayBtn">🔁 Overlay</button>
-      <button class="btn-sm" id="resetBtn">↺ Reset</button>
-    </div>
+  <div class="readout">
+    <div class="stat"><span class="v" id="statRows">—</span><span class="l">rows</span></div>
+    <div class="stat"><span class="v" id="statCols">—</span><span class="l">columns</span></div>
+    <div class="stat"><span class="v" id="statNum">—</span><span class="l">numeric</span></div>
+    <div class="stat"><span class="v" id="statCat">—</span><span class="l">categorical</span></div>
+    <div class="stat"><span class="v" id="statSeries">0</span><span class="l">series plotted</span></div>
   </div>
+</header>
 
-  <!-- chart + advanced editing + title controls -->
-  <div class="graph-container">
-    <div class="chart-wrapper">
-      <canvas id="myChart"></canvas>
-    </div>
-    <div class="advanced-editor">
-      <div class="title-group">
-        <label>📝 Title <input type="text" id="chartTitle" value="MHM Chart" placeholder="Chart title"></label>
-        <label>Size <input type="range" id="titleSize" min="10" max="32" value="18" style="width:80px;"></label>
-        <label>Color <input type="color" id="titleColor" value="#0b2b4a"></label>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+
+    <div class="block">
+      <div class="block-title">01 · Source</div>
+      <div class="dropzone" id="dropzone">
+        <strong>Drop a spreadsheet</strong>
+        Click to browse, or drag a .xlsx / .xls / .csv file here
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
       </div>
-      <label>🎨 Color <input type="color" id="colorPicker" value="#2a7de1"></label>
-      <label>📏 Border <input type="range" id="borderWidth" min="0.5" max="6" step="0.5" value="2.5" style="width:80px;"></label>
-      <label>🔘 Point <input type="range" id="pointRadius" min="1" max="10" step="0.5" value="4" style="width:80px;"></label>
-      <label><input type="checkbox" id="fillToggle" checked> Fill</label>
-      <button class="btn-sm" id="applyStyleBtn">Apply style</button>
+      <div class="file-tag" id="fileTag">
+        <span id="fileTagName">—</span>
+        <button id="fileTagClear" title="Remove file">✕</button>
+      </div>
+      <div id="sheetPickerWrap" style="display:none;">
+        <label class="field-label">Sheet</label>
+        <select id="sheetPicker"></select>
+      </div>
     </div>
-  </div>
 
-  <!-- descriptive analysis -->
-  <div class="descriptive-box" id="descriptiveBox">
-    <strong>📋 Descriptive analysis</strong> <span id="descText">Load data to see statistics &amp; relations.</span>
-  </div>
-  <div class="footer-note">MHM Data Analysis · Use "Apply graph" to change chart type · over 40 chart types available</div>
+    <div class="block" id="analysisBlock" style="display:none;">
+      <div class="block-title">02 · Analysis type</div>
+      <select id="analysisType">
+        <option value="single">Single variable (univariate)</option>
+        <option value="bi">Two variables (bivariate)</option>
+        <option value="multi">Multiple variables (multivariate)</option>
+      </select>
+      <div class="hint" id="analysisHint">Explore the distribution of one column at a time.</div>
+    </div>
+
+    <div class="block" id="variableBlock" style="display:none;">
+      <div class="block-title">03 · Variables</div>
+      <div id="variableUI"></div>
+    </div>
+
+    <div class="block" id="graphBlock" style="display:none;">
+      <div class="block-title">04 · Graph type</div>
+      <select id="graphType"></select>
+      <div class="hint" id="graphHint"></div>
+      <div class="btn-row">
+        <button class="btn primary" id="addSeriesBtn">＋ Add to chart</button>
+        <button class="btn ghost" id="clearChartBtn">Clear</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="workspace" id="workspace">
+
+    <div class="panel" id="chartPanel">
+      <div class="panel-head">
+        <h2>Overlay Canvas</h2>
+        <div class="tools">
+          <button class="btn small ghost" id="toggleAdvBtn">Design options</button>
+        </div>
+      </div>
+
+      <div id="advPanel" class="adv-grid" style="display:none; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--line);">
+        <div class="field">
+          <small>Chart title</small>
+          <input type="text" id="optTitle" placeholder="Untitled chart">
+        </div>
+        <div class="field">
+          <small>X axis label</small>
+          <input type="text" id="optXLabel" placeholder="">
+        </div>
+        <div class="field">
+          <small>Y axis label</small>
+          <input type="text" id="optYLabel" placeholder="">
+        </div>
+        <div class="field">
+          <small>Legend position</small>
+          <select id="optLegendPos">
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+            <option value="hidden">Hidden</option>
+          </select>
+        </div>
+        <div class="field">
+          <small>Point radius (line/scatter)</small>
+          <input type="range" id="optPointRadius" min="0" max="10" value="4">
+        </div>
+        <div class="field">
+          <small>Line/border width</small>
+          <input type="range" id="optBorderWidth" min="1" max="8" value="2">
+        </div>
+        <div class="field">
+          <small>Fill opacity</small>
+          <input type="range" id="optOpacity" min="10" max="100" value="55">
+        </div>
+        <div class="field">
+          <small>Corner radius (bars)</small>
+          <input type="range" id="optCorner" min="0" max="16" value="3">
+        </div>
+        <div class="field">
+          <small>Curve tension (lines)</small>
+          <input type="range" id="optTension" min="0" max="60" value="15">
+        </div>
+        <div class="field">
+          <span class="toggle-row"><input type="checkbox" id="optGrid" checked> <span>Show gridlines</span></span>
+          <span class="toggle-row"><input type="checkbox" id="optFill"> <span>Fill under lines</span></span>
+        </div>
+      </div>
+
+      <div class="chart-wrap" id="chartWrap">
+        <canvas id="mainChart"></canvas>
+        <div class="empty-state" id="chartEmpty">
+          <div class="glyph">╱╲╱╲</div>
+          <div><strong>No series yet.</strong></div>
+          <div>Upload a spreadsheet, choose variables and a graph type, then Add to chart.<br>Add several series to compare relationships on one canvas.</div>
+        </div>
+      </div>
+
+      <div class="dataset-list" id="datasetList"></div>
+    </div>
+
+    <div class="panel" id="dataPanel" style="display:none;">
+      <div class="panel-head"><h2>Data preview</h2></div>
+      <div class="table-scroll"><table class="preview" id="previewTable"></table></div>
+    </div>
+
+    <div class="panel" id="statsPanel" style="display:none;">
+      <div class="panel-head"><h2>Descriptive analysis</h2></div>
+      <div id="statsContent"></div>
+    </div>
+
+  </main>
 </div>
 
 <script>
-  (function() {
-    // ---------- state ----------
-    let workbookData = null;
-    let headers = [];
-    let chartInstance = null;
-    let overlayChart = null;
-    let overlayActive = false;
-    let currentAnalysis = 'bi';
-    let currentGraph = 'bar';
+/* =========================================================================
+   MHMDataAnalysis&Visual — spreadsheet analysis console
+   Sections: state, file parsing, column typing, UI builders, stats,
+             chart engine (overlay + mixed types), advanced design controls.
+   ========================================================================= */
 
-    // DOM refs
-    const fileInput = document.getElementById('fileInput');
-    const fileStatus = document.getElementById('fileStatus');
-    const analysisType = document.getElementById('analysisType');
-    const graphType = document.getElementById('graphType');
-    const colorPicker = document.getElementById('colorPicker');
-    const borderWidth = document.getElementById('borderWidth');
-    const pointRadius = document.getElementById('pointRadius');
-    const fillToggle = document.getElementById('fillToggle');
-    const applyStyleBtn = document.getElementById('applyStyleBtn');
-    const applyGraphBtn = document.getElementById('applyGraphBtn');
-    const overlayBtn = document.getElementById('overlayBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const exportReportBtn = document.getElementById('exportReportBtn');
-    const descText = document.getElementById('descText');
-    const chartTitleInput = document.getElementById('chartTitle');
-    const titleSizeInput = document.getElementById('titleSize');
-    const titleColorInput = document.getElementById('titleColor');
-    const ctx = document.getElementById('myChart').getContext('2d');
+const state = {
+  columns: [],
+  rows: [],
+  workbook: null,
+  chart: null,
+  chartMode: null,
+  chartXScale: null,
+  stackedMode: false,
+  seriesCounter: 0,
+  seriesList: [],
+  palette: ['#4FD1C5','#F2A65A','#9F8CE5','#E5697A','#7FB3E8','#C6E86B','#E88CC8','#6BE8A8']
+};
 
-    // ---------- helpers ----------
-    function getNumericColumns(data, headers) {
-      const numericCols = [];
-      for (let h of headers) {
-        let values = data.map(row => parseFloat(row[h])).filter(v => !isNaN(v));
-        if (values.length > data.length * 0.5) numericCols.push(h);
-      }
-      return numericCols;
-    }
+const $ = (id) => document.getElementById(id);
 
-    function getSampleData(data, headers, limit = 200) {
-      return data.slice(0, limit);
-    }
+const dropzone = $('dropzone');
+const fileInput = $('fileInput');
 
-    // ---------- build chart config with title ----------
-    function buildChart(analysis, graph, data, headers, color, borderW, pointR, fill, isOverlay = false) {
-      if (!data || data.length === 0) return null;
-      const numericCols = getNumericColumns(data, headers);
-      if (numericCols.length === 0) {
-        descText.innerText = '⚠️ No numeric columns found.';
-        return null;
-      }
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+$('fileTagClear').addEventListener('click', resetApp);
 
-      let selectedCols = [];
-      if (analysis === 'single') {
-        selectedCols = [numericCols[0]];
-      } else if (analysis === 'bi') {
-        selectedCols = numericCols.slice(0, 2);
-        if (selectedCols.length < 2) selectedCols = numericCols.slice(0, 1);
-      } else {
-        selectedCols = numericCols.slice(0, Math.min(4, numericCols.length));
-        if (selectedCols.length === 0) selectedCols = [numericCols[0]];
-      }
-
-      const sample = getSampleData(data, headers);
-      if (sample.length === 0) return null;
-
-      // Title settings
-      const titleText = chartTitleInput.value || 'MHM Chart';
-      const titleSize = parseInt(titleSizeInput.value) || 18;
-      const titleColor = titleColorInput.value || '#0b2b4a';
-
-      // common options with title
-      const commonOpts = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top' },
-          title: {
-            display: true,
-            text: titleText,
-            font: { size: titleSize, weight: 'bold' },
-            color: titleColor,
-            padding: { bottom: 12 }
-          }
-        }
-      };
-
-      // Map graph types to Chart.js types or handle special cases
-      const chartTypeMap = {
-        'bar': 'bar',
-        'column': 'bar', // will be handled with indexAxis
-        'groupedBar': 'bar',
-        'lollipop': 'bar', // will customize
-        'bullet': 'bar', // will customize
-        'dotPlot': 'scatter',
-        'dumbbell': 'scatter',
-        'pictogram': 'bar',
-        'iconChart': 'bar',
-        'rangePlot': 'bar',
-        'radialBar': 'bar',
-        'parallel': 'line',
-        'radar': 'radar',
-        'nightingale': 'doughnut',
-        'waterfall': 'bar',
-        'matrix': 'bar',
-        'smallMultiples': 'bar',
-        'wordCloud': 'bar',
-        'slope': 'line',
-        'table': 'bar',
-        'categoricalScatter': 'scatter',
-        'quadrant': 'scatter',
-        'heatmap': 'bar',
-        'bubble': 'bubble',
-        'scatter': 'scatter',
-        'connectedScatter': 'scatter',
-        'hexbin': 'scatter',
-        'contour': 'scatter',
-        'stackedBar': 'bar',
-        'divergingBar': 'bar',
-        'populationPyramid': 'bar',
-        'iconArray': 'bar',
-        'waffle': 'bar',
-        'pie': 'pie',
-        'doughnut': 'doughnut',
-        'semicircleDonut': 'doughnut',
-        'marimekko': 'bar',
-        'treemap': 'bar',
-        'circularTreemap': 'bar',
-        'convexTreemap': 'bar',
-        'dendrogram': 'line',
-        'venn': 'bar',
-        'euler': 'bar',
-        'circularGauge': 'doughnut',
-        'sunburst': 'doughnut',
-        'funnel': 'bar',
-        'area': 'line',
-        'stackedArea': 'line',
-        'stream': 'line',
-        'bump': 'line',
-        'line': 'line'
-      };
-
-      // For now, we'll use a simplified approach: map to Chart.js types
-      // and customize based on the specific graph type
-      let chartType = chartTypeMap[graph] || 'bar';
-      
-      // Special handling for column chart (vertical bar)
-      if (graph === 'column') {
-        chartType = 'bar';
-      }
-
-      // Build datasets
-      let labels = [];
-      let datasets = [];
-
-      // For scatter-type charts
-      if (['scatter', 'dotPlot', 'dumbbell', 'categoricalScatter', 'quadrant', 'bubble', 'connectedScatter', 'hexbin', 'contour'].includes(graph)) {
-        if (selectedCols.length >= 2) {
-          const xCol = selectedCols[0];
-          const yCol = selectedCols[1];
-          const scatterData = sample.map(row => ({ x: parseFloat(row[xCol]), y: parseFloat(row[yCol]) }))
-                                    .filter(d => !isNaN(d.x) && !isNaN(d.y));
-          if (scatterData.length === 0) return null;
-          
-          // For bubble chart, add a third dimension
-          if (graph === 'bubble' && selectedCols.length >= 3) {
-            const rCol = selectedCols[2];
-            scatterData.forEach(d => {
-              const r = parseFloat(sample.find(row => row[selectedCols[0]] == d.x)[rCol]);
-              d.r = isNaN(r) ? 5 : Math.max(2, r / 10);
-            });
-          }
-          
-          return {
-            type: 'scatter',
-            data: {
-              datasets: [{
-                label: `${yCol} vs ${xCol}`,
-                data: scatterData,
-                backgroundColor: color || '#2a7de1',
-                borderColor: color || '#2a7de1',
-                borderWidth: borderW || 2.5,
-                pointRadius: pointR || 4,
-                fill: false,
-              }]
-            },
-            options: {
-              ...commonOpts,
-              scales: {
-                x: { type: 'linear', position: 'bottom' }
-              }
-            }
-          };
-        }
-        return null;
-      }
-
-      // Build labels
-      let useLabels = sample.map((row, i) => {
-        const firstCol = headers[0];
-        const val = row[firstCol];
-        if (typeof val === 'string' || val instanceof String) return val;
-        if (!isNaN(parseFloat(val)) && headers.length > 1) return `#${i+1}`;
-        return `#${i+1}`;
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      state.workbook = wb;
+      $('fileTagName').textContent = file.name;
+      $('fileTag').style.display = 'flex';
+      $('dropzone').style.display = 'none';
+      const sheetWrap = $('sheetPickerWrap');
+      const picker = $('sheetPicker');
+      picker.innerHTML = '';
+      wb.SheetNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        picker.appendChild(opt);
       });
+      sheetWrap.style.display = wb.SheetNames.length > 1 ? 'block' : 'none';
+      picker.onchange = () => loadSheet(picker.value);
+      loadSheet(wb.SheetNames[0]);
+    } catch (err) {
+      alert('Could not read this file. Please upload a valid .xlsx, .xls or .csv file.');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
 
-      const firstNum = selectedCols[0];
-      const useNumericLabels = selectedCols.length >= 2 && !isNaN(parseFloat(sample[0][firstNum]));
-      if (useNumericLabels) {
-        useLabels = sample.map(row => parseFloat(row[firstNum])).filter(v => !isNaN(v));
-        if (useLabels.length === 0) useLabels = sample.map((_, i) => `#${i+1}`);
-      }
+function loadSheet(sheetName) {
+  const ws = state.workbook.Sheets[sheetName];
+  let json = XLSX.utils.sheet_to_json(ws, { defval: null });
+  if (!json.length) { alert('This sheet appears to be empty.'); return; }
+  state.rows = json;
+  state.columns = detectColumns(json);
+  resetSeries();
+  renderReadout();
+  renderPreview();
+  renderVariableSelectionShell();
+  $('analysisBlock').style.display = 'flex';
+  $('dataPanel').style.display = 'block';
+}
 
-      let datasetCols = selectedCols;
-      if (useNumericLabels && selectedCols.length > 1) {
-        datasetCols = selectedCols.slice(1);
-      } else if (!useNumericLabels && selectedCols.length >= 1) {
-        if (headers.length > 1 && !isNaN(parseFloat(sample[0][selectedCols[0]]))) {
-          if (selectedCols.length === 1) datasetCols = selectedCols;
-          else datasetCols = selectedCols.slice(1);
-        } else {
-          datasetCols = selectedCols;
-        }
-      }
-      if (datasetCols.length === 0) datasetCols = [selectedCols[0]];
+function resetApp() {
+  state.workbook = null; state.rows = []; state.columns = [];
+  $('fileTag').style.display = 'none';
+  $('dropzone').style.display = 'block';
+  fileInput.value = '';
+  ['analysisBlock','variableBlock','graphBlock','dataPanel'].forEach(id => $(id).style.display = 'none');
+  $('statsPanel').style.display = 'none';
+  resetSeries();
+  renderReadout();
+}
 
-      const colors = ['#2a7de1', '#e85d5d', '#2ea87a', '#e6a02e', '#8b5cf6', '#e060b0'];
-      datasets = datasetCols.map((col, idx) => {
-        const dataPoints = sample.map(row => {
-          const v = parseFloat(row[col]);
-          return isNaN(v) ? null : v;
+function detectColumns(rows) {
+  const names = Object.keys(rows[0]);
+  return names.map(name => {
+    const values = rows.map(r => r[name]).filter(v => v !== null && v !== undefined && v !== '');
+    if (!values.length) return { name, type: 'categorical' };
+    const isDate = values.every(v => v instanceof Date);
+    if (isDate) return { name, type: 'date' };
+    const numericCount = values.filter(v => typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && !isNaN(Number(v)))).length;
+    if (numericCount / values.length >= 0.9) return { name, type: 'numeric' };
+    return { name, type: 'categorical' };
+  });
+}
+
+function colValues(name, numeric) {
+  const col = state.columns.find(c => c.name === name);
+  let vals = state.rows.map(r => r[name]).filter(v => v !== null && v !== undefined && v !== '');
+  if (numeric || (col && col.type === 'numeric')) vals = vals.map(Number).filter(v => !isNaN(v));
+  return vals;
+}
+
+function renderReadout() {
+  $('statRows').textContent = state.rows.length || '—';
+  $('statCols').textContent = state.columns.length || '—';
+  $('statNum').textContent = state.columns.filter(c => c.type === 'numeric').length;
+  $('statCat').textContent = state.columns.filter(c => c.type !== 'numeric').length;
+}
+
+function renderPreview() {
+  const table = $('previewTable');
+  const cols = state.columns.map(c => c.name);
+  const rows = state.rows.slice(0, 12);
+  let html = '<thead><tr>' + cols.map(c => `<th>${escapeHtml(c)}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += '<tr>' + cols.map(c => `<td>${escapeHtml(fmtCell(r[c]))}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function fmtCell(v) {
+  if (v === null || v === undefined) return '';
+  if (v instanceof Date) return v.toLocaleDateString();
+  if (typeof v === 'number') return Number.isInteger(v) ? v : v.toFixed(3);
+  return String(v);
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ------------------------- Analysis type + variables ------------------------- */
+
+const ANALYSIS_HINTS = {
+  single: 'Explore the distribution or spread of one column at a time.',
+  bi: 'Compare two columns to look for a relationship between them.',
+  multi: 'Compare three or more numeric columns at once, optionally grouped by a category.'
+};
+
+$('analysisType').addEventListener('change', () => {
+  $('analysisHint').textContent = ANALYSIS_HINTS[$('analysisType').value];
+  renderVariableSelectionShell();
+});
+
+function renderVariableSelectionShell() {
+  const type = $('analysisType').value;
+  const ui = $('variableUI');
+  const numericCols = state.columns.filter(c => c.type === 'numeric');
+  const catCols = state.columns.filter(c => c.type !== 'numeric');
+  const allCols = state.columns;
+
+  if (type === 'single') {
+    ui.innerHTML = `
+      <label class="field-label">Variable</label>
+      <select id="varA">${allCols.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.type})</option>`).join('')}</select>
+    `;
+    $('varA').addEventListener('change', updateGraphOptions);
+  } else if (type === 'bi') {
+    ui.innerHTML = `
+      <label class="field-label">X — variable A</label>
+      <select id="varA">${allCols.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.type})</option>`).join('')}</select>
+      <label class="field-label" style="margin-top:10px;">Y — variable B</label>
+      <select id="varB">${allCols.map((c,i) => `<option value="${escapeHtml(c.name)}" ${i===1?'selected':''}>${escapeHtml(c.name)} (${c.type})</option>`).join('')}</select>
+    `;
+    $('varA').addEventListener('change', updateGraphOptions);
+    $('varB').addEventListener('change', updateGraphOptions);
+  } else {
+    ui.innerHTML = `
+      <label class="field-label">Numeric variables (pick 2+)</label>
+      <div class="checklist" id="varMultiList">
+        ${numericCols.map(c => `<label><input type="checkbox" value="${escapeHtml(c.name)}"> ${escapeHtml(c.name)} <span class="type-badge num">num</span></label>`).join('') || '<div class="hint">No numeric columns detected.</div>'}
+      </div>
+      <label class="field-label" style="margin-top:10px;">Group by (optional)</label>
+      <select id="varGroup">
+        <option value="">None</option>
+        ${catCols.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('')}
+      </select>
+    `;
+    ui.querySelectorAll('#varMultiList input').forEach(cb => cb.addEventListener('change', updateGraphOptions));
+    $('varGroup').addEventListener('change', updateGraphOptions);
+  }
+  $('variableBlock').style.display = 'flex';
+  updateGraphOptions();
+}
+
+function currentVarTypes() {
+  const type = $('analysisType').value;
+  const colType = (n) => (state.columns.find(c => c.name === n) || {}).type;
+  if (type === 'single') {
+    const a = $('varA') ? $('varA').value : null;
+    return { mode: 'single', a, aType: colType(a) };
+  }
+  if (type === 'bi') {
+    const a = $('varA') ? $('varA').value : null;
+    const b = $('varB') ? $('varB').value : null;
+    return { mode: 'bi', a, b, aType: colType(a), bType: colType(b) };
+  }
+  const checks = Array.from(document.querySelectorAll('#varMultiList input:checked')).map(c => c.value);
+  const group = $('varGroup') ? $('varGroup').value : '';
+  return { mode: 'multi', vars: checks, group: group || null };
+}
+
+const GRAPH_OPTIONS = {
+  'single-numeric': [
+    { v:'histogram', l:'Histogram (distribution)' },
+    { v:'line-index', l:'Line — value by row order' },
+    { v:'range', l:'Range chart (min · median · max)' },
+    { v:'cumulative', l:'Cumulative line' }
+  ],
+  'single-categorical': [
+    { v:'bar-freq', l:'Bar — frequency count' },
+    { v:'pie', l:'Pie chart' },
+    { v:'doughnut', l:'Doughnut chart' }
+  ],
+  'bi-num-num': [
+    { v:'scatter', l:'Scatter plot' },
+    { v:'line-xy', l:'Line — A ordered by X' },
+    { v:'bubble-density', l:'Scatter with trend line' }
+  ],
+  'bi-cat-num': [
+    { v:'bar-mean', l:'Bar — mean of numeric by category' },
+    { v:'range-cat', l:'Range chart by category (min · median · max)' },
+    { v:'box-approx', l:'Box-style spread by category' }
+  ],
+  'bi-cat-cat': [
+    { v:'stacked-crosstab', l:'Stacked bar — cross-tabulation' },
+    { v:'grouped-crosstab', l:'Grouped bar — cross-tabulation' }
+  ],
+  'multi': [
+    { v:'multi-line', l:'Multi-line — values by row order' },
+    { v:'grouped-bar-means', l:'Grouped bar — mean comparison' },
+    { v:'radar-means', l:'Radar — mean comparison' },
+    { v:'stacked-bar-means', l:'Stacked bar — mean comparison' }
+  ]
+};
+
+function graphKeyFor(vt) {
+  if (vt.mode === 'single') return vt.aType === 'numeric' ? 'single-numeric' : 'single-categorical';
+  if (vt.mode === 'bi') {
+    if (vt.aType === 'numeric' && vt.bType === 'numeric') return 'bi-num-num';
+    if (vt.aType !== 'numeric' && vt.bType !== 'numeric') return 'bi-cat-cat';
+    return 'bi-cat-num';
+  }
+  return 'multi';
+}
+
+function updateGraphOptions() {
+  const vt = currentVarTypes();
+  const key = graphKeyFor(vt);
+  const opts = GRAPH_OPTIONS[key] || [];
+  const sel = $('graphType');
+  sel.innerHTML = opts.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+  const ready = vt.mode === 'multi' ? vt.vars.length >= 2 : (vt.mode === 'single' ? !!vt.a : (!!vt.a && !!vt.b));
+  $('graphBlock').style.display = opts.length && ready ? 'flex' : 'none';
+  $('graphHint').textContent = ready ? '' : (vt.mode === 'multi' ? 'Select at least two numeric variables.' : 'Choose your variable(s) above.');
+}
+
+/* ------------------------------ Statistics ------------------------------ */
+
+function mean(arr){ return arr.reduce((a,b)=>a+b,0) / arr.length; }
+function median(arr){ const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+function stdev(arr){ const m=mean(arr); return Math.sqrt(arr.reduce((a,b)=>a+(b-m)*(b-m),0) / (arr.length-1 || 1)); }
+function quantile(arr, q){ const s=[...arr].sort((a,b)=>a-b); const pos=(s.length-1)*q; const base=Math.floor(pos); const rest=pos-base; return s[base+1]!==undefined ? s[base]+rest*(s[base+1]-s[base]) : s[base]; }
+function mode(arr){
+  const freq={}; arr.forEach(v=>freq[v]=(freq[v]||0)+1);
+  let best=null,bestN=-1;
+  Object.entries(freq).forEach(([k,n])=>{ if(n>bestN){best=k;bestN=n;} });
+  return best;
+}
+function pearson(x,y){
+  const n=Math.min(x.length,y.length);
+  const mx=mean(x.slice(0,n)), my=mean(y.slice(0,n));
+  let num=0,dx=0,dy=0;
+  for(let i=0;i<n;i++){ num+=(x[i]-mx)*(y[i]-my); dx+=(x[i]-mx)**2; dy+=(y[i]-my)**2; }
+  const denom=Math.sqrt(dx*dy);
+  return denom===0 ? 0 : num/denom;
+}
+function linreg(x,y){
+  const n=Math.min(x.length,y.length);
+  const mx=mean(x.slice(0,n)), my=mean(y.slice(0,n));
+  let num=0,den=0;
+  for(let i=0;i<n;i++){ num+=(x[i]-mx)*(y[i]-my); den+=(x[i]-mx)**2; }
+  const slope = den===0 ? 0 : num/den;
+  const intercept = my - slope*mx;
+  return {slope, intercept};
+}
+function frequencyTable(vals){
+  const freq={}; vals.forEach(v=>{ const k=String(v); freq[k]=(freq[k]||0)+1; });
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+}
+function corrStrength(r){
+  const a=Math.abs(r);
+  if(a<0.1) return 'negligible';
+  if(a<0.3) return 'weak';
+  if(a<0.5) return 'moderate';
+  if(a<0.7) return 'strong';
+  return 'very strong';
+}
+function fmtNum(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return Math.abs(n) >= 1000 ? n.toLocaleString(undefined,{maximumFractionDigits:1}) : n.toFixed( Number.isInteger(n) ? 0 : 2 );
+}
+function groupBy(catCol, numCol){
+  const g={};
+  state.rows.forEach(r=>{
+    const c=r[catCol]; const v=Number(r[numCol]);
+    if(c!==null && c!==undefined && c!=='' && !isNaN(v)){ const k=String(c); (g[k]=g[k]||[]).push(v); }
+  });
+  return g;
+}
+function crosstabCounts(colA, colB){
+  const counts={}; const setB=new Set();
+  state.rows.forEach(r=>{
+    const a=r[colA], b=r[colB];
+    if(a===null||a===undefined||a===''||b===null||b===undefined||b==='') return;
+    const ka=String(a), kb=String(b);
+    setB.add(kb);
+    counts[ka]=counts[ka]||{}; counts[ka][kb]=(counts[ka][kb]||0)+1;
+  });
+  return { counts, valuesB:[...setB] };
+}
+function hexToRgba(hex, pct){
+  const h=hex.replace('#','');
+  const r=parseInt(h.substring(0,2),16), g=parseInt(h.substring(2,4),16), b=parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${Math.max(0,Math.min(100,pct))/100})`;
+}
+
+/* ------------------------------ Series state ------------------------------ */
+
+function resetSeries(){
+  state.seriesList = [];
+  state.seriesCounter = 0;
+  if (state.chart) { state.chart.destroy(); state.chart = null; }
+  state.chartMode = null; state.chartXScale = null;
+  $('datasetList').innerHTML = '';
+  $('statsContent').innerHTML = '';
+  $('statsPanel').style.display = 'none';
+  $('chartEmpty').style.display = 'flex';
+  $('statSeries').textContent = '0';
+}
+
+function advOpts(){
+  return {
+    title: $('optTitle').value,
+    xLabel: $('optXLabel').value,
+    yLabel: $('optYLabel').value,
+    legendPos: $('optLegendPos').value,
+    pointRadius: Number($('optPointRadius').value),
+    borderWidth: Number($('optBorderWidth').value),
+    opacity: Number($('optOpacity').value),
+    corner: Number($('optCorner').value),
+    tension: Number($('optTension').value)/100,
+    grid: $('optGrid').checked,
+    fill: $('optFill').checked
+  };
+}
+
+function buildChartOptions(mode, xScale){
+  const o = advOpts();
+  const options = {
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 450 },
+    plugins: {
+      title: { display: !!o.title, text: o.title, color: '#E8EAED', font: { family: "'Space Grotesk', sans-serif", size: 15, weight: '600' } },
+      legend: { display: o.legendPos !== 'hidden', position: o.legendPos === 'hidden' ? 'top' : o.legendPos, labels: { color: '#8B95A5', font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
+      tooltip: { titleFont:{family:"'IBM Plex Mono', monospace"}, bodyFont:{family:"'IBM Plex Mono', monospace"} }
+    }
+  };
+  if (mode === 'cartesian') {
+    options.scales = {
+      x: { type: xScale === 'linear' ? 'linear' : 'category',
+           title: { display: !!o.xLabel, text: o.xLabel, color:'#8B95A5' },
+           grid: { display: o.grid, color: 'rgba(255,255,255,0.06)' },
+           ticks: { color: '#8B95A5', font:{family:"'IBM Plex Mono', monospace", size:10.5} } },
+      y: { title: { display: !!o.yLabel, text: o.yLabel, color:'#8B95A5' },
+           grid: { display: o.grid, color: 'rgba(255,255,255,0.06)' },
+           ticks: { color: '#8B95A5', font:{family:"'IBM Plex Mono', monospace", size:10.5} },
+           stacked: !!state.stackedMode },
+    };
+    if (state.stackedMode) options.scales.x.stacked = true;
+  } else if (mode === 'radar') {
+    options.scales = { r: { grid:{ display:o.grid, color:'rgba(255,255,255,0.08)' }, angleLines:{color:'rgba(255,255,255,0.08)'},
+                             pointLabels:{ color:'#8B95A5', font:{family:"'IBM Plex Mono', monospace", size:10.5} },
+                             ticks:{ color:'#5B6472', backdropColor:'transparent' } } };
+  }
+  return options;
+}
+
+function applyAdvancedOptionsLive(){
+  if (!state.chart) return;
+  const opts = buildChartOptions(state.chartMode, state.chartXScale);
+  state.chart.options.plugins.title = opts.plugins.title;
+  state.chart.options.plugins.legend = opts.plugins.legend;
+  if (opts.scales) state.chart.options.scales = opts.scales;
+  state.chart.update();
+}
+['optTitle','optXLabel','optYLabel','optLegendPos','optGrid'].forEach(id => {
+  $(id).addEventListener('input', applyAdvancedOptionsLive);
+  $(id).addEventListener('change', applyAdvancedOptionsLive);
+});
+$('toggleAdvBtn').addEventListener('click', () => {
+  const p = $('advPanel');
+  p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+});
+
+/* ------------------------------ Series builder ------------------------------ */
+
+function buildSeries(vt, graphType) {
+  const o = advOpts();
+  const mk = (over) => Object.assign({ kind:'bar' }, over);
+
+  // ---------- single numeric ----------
+  if (graphType === 'histogram') {
+    const vals = colValues(vt.a, true);
+    if (vals.length < 2) { alert('Not enough numeric values to build a histogram.'); return null; }
+    const k = Math.max(4, Math.ceil(Math.log2(vals.length) + 1));
+    let mn = Math.min(...vals), mx = Math.max(...vals); if (mn === mx) mx = mn + 1;
+    const w = (mx - mn) / k, bins = Array(k).fill(0);
+    vals.forEach(v => { let i = Math.floor((v - mn) / w); if (i >= k) i = k - 1; if (i < 0) i = 0; bins[i]++; });
+    const labels = Array.from({ length:k }, (_, i) => `${fmtNum(mn + i*w)}–${fmtNum(mn + (i+1)*w)}`);
+    const catMap = Object.fromEntries(labels.map((l,i) => [l, bins[i]]));
+    return { mode:'cartesian', xScale:'category', labels,
+      datasets:[ mk({ label:`${vt.a} — histogram`, data:bins, catMap, kind:'bar' }) ],
+      desc: describeSingleNumeric(vt.a, vals, 'distribution across bins') };
+  }
+  if (graphType === 'line-index') {
+    const vals = colValues(vt.a, true);
+    const labels = vals.map((_,i) => String(i+1));
+    const catMap = Object.fromEntries(labels.map((l,i) => [l, vals[i]]));
+    return { mode:'cartesian', xScale:'category', labels,
+      datasets:[ mk({ label:`${vt.a} — by row`, data:vals.slice(), catMap, kind:'line' }) ],
+      desc: describeSingleNumeric(vt.a, vals, 'trend across rows') };
+  }
+  if (graphType === 'range') {
+    const vals = colValues(vt.a, true);
+    if (!vals.length) { alert('No numeric values found.'); return null; }
+    const mn = Math.min(...vals), mx = Math.max(...vals), md = median(vals);
+    const label = vt.a, labels=[label];
+    return { mode:'cartesian', xScale:'category', labels,
+      datasets:[
+        mk({ label:`${vt.a} — min–max`, data:[[mn,mx]], catMap:{[label]:[mn,mx]}, kind:'range-bar' }),
+        mk({ label:`${vt.a} — median`, data:[md], catMap:{[label]:md}, kind:'point' })
+      ], desc: describeSingleNumeric(vt.a, vals, 'range and central tendency') };
+  }
+  if (graphType === 'cumulative') {
+    const vals = colValues(vt.a, true).sort((a,b)=>a-b);
+    if (!vals.length) { alert('No numeric values found.'); return null; }
+    const total = vals.reduce((a,b)=>a+b,0); let sum=0;
+    const cum = vals.map(v => { sum += v; return total ? (sum/total*100) : 0; });
+    const labels = vals.map((_,i)=>String(i+1));
+    const catMap = Object.fromEntries(labels.map((l,i)=>[l,cum[i]]));
+    return { mode:'cartesian', xScale:'category', labels,
+      datasets:[ mk({ label:`${vt.a} — cumulative %`, data:cum, catMap, kind:'line' }) ],
+      desc: describeSingleNumeric(vt.a, vals, 'cumulative share of total') };
+  }
+
+  // ---------- single categorical ----------
+  if (graphType === 'bar-freq') {
+    const vals = state.rows.map(r=>r[vt.a]).filter(v=>v!==null&&v!==undefined&&v!=='').map(String);
+    const freq = frequencyTable(vals);
+    const labels = freq.map(f=>f[0]);
+    const catMap = Object.fromEntries(freq);
+    return { mode:'cartesian', xScale:'category', labels,
+      datasets:[ mk({ label:`${vt.a} — count`, data:freq.map(f=>f[1]), catMap, kind:'bar' }) ],
+      desc: describeSingleCategorical(vt.a, freq, vals.length) };
+  }
+  if (graphType === 'pie' || graphType === 'doughnut') {
+    const vals = state.rows.map(r=>r[vt.a]).filter(v=>v!==null&&v!==undefined&&v!=='').map(String);
+    const freq = frequencyTable(vals);
+    return { mode:'pie', chartTypeHint: graphType, labels: freq.map(f=>f[0]),
+      datasets:[ mk({ label:vt.a, data:freq.map(f=>f[1]), kind:'pie' }) ],
+      desc: describeSingleCategorical(vt.a, freq, vals.length) };
+  }
+
+  // ---------- bivariate numeric-numeric ----------
+  if (graphType === 'scatter' || graphType === 'bubble-density') {
+    const xs = colValues(vt.a, true), ys = colValues(vt.b, true);
+    const n = Math.min(xs.length, ys.length);
+    const pts = Array.from({length:n}, (_,i) => ({x:xs[i], y:ys[i]}));
+    if (!n) { alert('No overlapping numeric rows for these two variables.'); return null; }
+    const datasets = [ mk({ label:`${vt.a} vs ${vt.b}`, data:pts, kind:'scatter' }) ];
+    if (graphType === 'bubble-density') {
+      const { slope, intercept } = linreg(xs.slice(0,n), ys.slice(0,n));
+      const xmin = Math.min(...xs.slice(0,n)), xmax = Math.max(...xs.slice(0,n));
+      datasets.push(mk({ label:'Trend line', data:[{x:xmin,y:slope*xmin+intercept},{x:xmax,y:slope*xmax+intercept}], kind:'trend' }));
+    }
+    return { mode:'cartesian', xScale:'linear', labels:null, datasets,
+      desc: describeBivariateNumeric(vt.a, vt.b, xs.slice(0,n), ys.slice(0,n)) };
+  }
+  if (graphType === 'line-xy') {
+    const xs = colValues(vt.a, true), ys = colValues(vt.b, true);
+    const n = Math.min(xs.length, ys.length);
+    let pts = Array.from({length:n}, (_,i) => ({x:xs[i], y:ys[i]})).sort((p,q)=>p.x-q.x);
+    if (!n) { alert('No overlapping numeric rows for these two variables.'); return null; }
+    return { mode:'cartesian', xScale:'linear', labels:null,
+      datasets:[ mk({ label:`${vt.a} → ${vt.b}`, data:pts, kind:'line-xy' }) ],
+      desc: describeBivariateNumeric(vt.a, vt.b, xs.slice(0,n), ys.slice(0,n)) };
+  }
+
+  // ---------- bivariate categorical-numeric ----------
+  if (graphType === 'bar-mean') {
+    const g = groupBy(vt.a, vt.b);
+    const labels = Object.keys(g);
+    if (!labels.length) { alert('No matching rows found for this pairing.'); return null; }
+    const data = labels.map(l => mean(g[l]));
+    const catMap = Object.fromEntries(labels.map((l,i)=>[l,data[i]]));
+    return { mode:'cartesian', xScale:'category', labels,
+      datasets:[ mk({ label:`mean(${vt.b}) by ${vt.a}`, data, catMap, kind:'bar' }) ],
+      desc: describeCatNum(vt.a, vt.b, g) };
+  }
+  if (graphType === 'range-cat' || graphType === 'box-approx') {
+    const g = groupBy(vt.a, vt.b);
+    const labels = Object.keys(g);
+    if (!labels.length) { alert('No matching rows found for this pairing.'); return null; }
+    const datasets = [];
+    if (graphType === 'box-approx') {
+      const whisker = labels.map(l => [Math.min(...g[l]), Math.max(...g[l])]);
+      const box = labels.map(l => [quantile(g[l],0.25), quantile(g[l],0.75)]);
+      const med = labels.map(l => median(g[l]));
+      datasets.push(mk({ label:`${vt.b} whisker by ${vt.a}`, data:whisker, catMap:Object.fromEntries(labels.map((l,i)=>[l,whisker[i]])), kind:'whisker' }));
+      datasets.push(mk({ label:`${vt.b} IQR by ${vt.a}`, data:box, catMap:Object.fromEntries(labels.map((l,i)=>[l,box[i]])), kind:'range-bar' }));
+      datasets.push(mk({ label:`${vt.b} median by ${vt.a}`, data:med, catMap:Object.fromEntries(labels.map((l,i)=>[l,med[i]])), kind:'point' }));
+    } else {
+      const rng = labels.map(l => [Math.min(...g[l]), Math.max(...g[l])]);
+      const med = labels.map(l => median(g[l]));
+      datasets.push(mk({ label:`${vt.b} min–max by ${vt.a}`, data:rng, catMap:Object.fromEntries(labels.map((l,i)=>[l,rng[i]])), kind:'range-bar' }));
+      datasets.push(mk({ label:`${vt.b} median by ${vt.a}`, data:med, catMap:Object.fromEntries(labels.map((l,i)=>[l,med[i]])), kind:'point' }));
+    }
+    return { mode:'cartesian', xScale:'category', labels, datasets, desc: describeCatNum(vt.a, vt.b, g) };
+  }
+
+  // ---------- bivariate categorical-categorical ----------
+  if (graphType === 'stacked-crosstab' || graphType === 'grouped-crosstab') {
+    const { counts, valuesB } = crosstabCounts(vt.a, vt.b);
+    const labels = Object.keys(counts);
+    if (!labels.length) { alert('No matching rows found for this pairing.'); return null; }
+    state.stackedMode = graphType === 'stacked-crosstab';
+    const datasets = valuesB.slice(0,10).map(b => {
+      const data = labels.map(a => (counts[a] && counts[a][b]) || 0);
+      return mk({ label:`${vt.b}: ${b}`, data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind:'bar' });
+    });
+    return { mode:'cartesian', xScale:'category', labels, datasets,
+      desc: describeCrosstab(vt.a, vt.b, counts, labels, valuesB) };
+  }
+
+  // ---------- multivariate ----------
+  if (graphType === 'multi-line') {
+    if (vt.vars.length < 2) { alert('Select at least two numeric variables.'); return null; }
+    const maxLen = Math.max(...vt.vars.map(v => colValues(v,true).length));
+    const labels = Array.from({length:maxLen}, (_,i)=>String(i+1));
+    const datasets = vt.vars.map(v => {
+      const vals = colValues(v,true);
+      const catMap = Object.fromEntries(labels.map((l,i)=>[l, i<vals.length?vals[i]:null]));
+      return mk({ label:v, data:labels.map(l=>catMap[l]), catMap, kind:'line' });
+    });
+    return { mode:'cartesian', xScale:'category', labels, datasets, desc: describeMulti(vt.vars) };
+  }
+  if (graphType === 'grouped-bar-means' || graphType === 'stacked-bar-means' || graphType === 'radar-means') {
+    if (vt.vars.length < 2) { alert('Select at least two numeric variables.'); return null; }
+    const labels = vt.vars.slice();
+    let datasets;
+    if (vt.group) {
+      const groupVals = [...new Set(state.rows.map(r=>r[vt.group]).filter(v=>v!==null&&v!==undefined&&v!==''))].map(String).slice(0,8);
+      datasets = groupVals.map(gv => {
+        const data = vt.vars.map(v => {
+          const vals = state.rows.filter(r => String(r[vt.group]) === gv).map(r => Number(r[v])).filter(n=>!isNaN(n));
+          return vals.length ? mean(vals) : null;
         });
-        return {
-          label: col,
-          data: dataPoints,
-          backgroundColor: colors[idx % colors.length],
-          borderColor: colors[idx % colors.length],
-          borderWidth: borderW || 2.5,
-          pointRadius: pointR || 4,
-          fill: fill !== undefined ? fill : true,
-          tension: 0.2,
-        };
+        return mk({ label:`${vt.group}: ${gv}`, data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind:'bar' });
       });
-
-      // For pie/doughnut/sunburst/nightingale
-      if (['pie', 'doughnut', 'nightingale', 'sunburst', 'circularGauge'].includes(graph)) {
-        if (datasets.length > 0) {
-          const singleData = datasets[0].data.filter(v => v !== null);
-          return {
-            type: graph === 'nightingale' ? 'doughnut' : graph === 'sunburst' ? 'doughnut' : graph === 'circularGauge' ? 'doughnut' : graph,
-            data: {
-              labels: useLabels.slice(0, singleData.length),
-              datasets: [{
-                data: singleData,
-                backgroundColor: ['#2a7de1','#e85d5d','#2ea87a','#e6a02e','#8b5cf6','#e060b0'],
-                borderWidth: borderW || 2,
-              }]
-            },
-            options: commonOpts
-          };
-        }
-        return null;
-      }
-
-      // For stacked bar
-      if (graph === 'stackedBar') {
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: datasets },
-          options: {
-            ...commonOpts,
-            scales: { x: { stacked: true }, y: { stacked: true } }
-          }
-        };
-      }
-
-      // For diverging bar
-      if (graph === 'divergingBar') {
-        // Simple implementation: use bar with negative values
-        const divergingData = datasets.map(ds => ({
-          ...ds,
-          data: ds.data.map(v => v !== null ? (v - (ds.data.reduce((a,b) => a+b, 0) / ds.data.length)) : null)
-        }));
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: divergingData },
-          options: commonOpts
-        };
-      }
-
-      // For population pyramid
-      if (graph === 'populationPyramid') {
-        // Similar to diverging bar but with specific formatting
-        const pyramidData = datasets.map((ds, idx) => ({
-          ...ds,
-          data: ds.data.map(v => v !== null ? (idx === 0 ? -v : v) : null)
-        }));
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: pyramidData },
-          options: commonOpts
-        };
-      }
-
-      // For column chart (vertical bars)
-      if (graph === 'column') {
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: datasets },
-          options: {
-            ...commonOpts,
-            indexAxis: 'y'
-          }
-        };
-      }
-
-      // For grouped bar chart
-      if (graph === 'groupedBar') {
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: datasets },
-          options: commonOpts
-        };
-      }
-
-      // For lollipop chart (bar with circle at end)
-      if (graph === 'lollipop') {
-        // Use bar chart with custom styling
-        const lollipopDatasets = datasets.map(ds => ({
-          ...ds,
-          backgroundColor: 'transparent',
-          borderWidth: 3,
-          borderColor: ds.borderColor,
-          pointRadius: 6,
-          pointBackgroundColor: ds.backgroundColor
-        }));
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: lollipopDatasets },
-          options: commonOpts
-        };
-      }
-
-      // For funnel chart
-      if (graph === 'funnel') {
-        // Sort data descending for funnel effect
-        const sortedDatasets = datasets.map(ds => ({
-          ...ds,
-          data: [...ds.data].sort((a,b) => (b || 0) - (a || 0))
-        }));
-        return {
-          type: 'bar',
-          data: { labels: useLabels, datasets: sortedDatasets },
-          options: commonOpts
-        };
-      }
-
-      // For radar chart
-      if (graph === 'radar') {
-        return {
-          type: 'radar',
-          data: { labels: useLabels, datasets: datasets },
-          options: commonOpts
-        };
-      }
-
-      // Default: bar or line
-      if (graph === 'line' || graph === 'area' || graph === 'stackedArea' || graph === 'stream' || graph === 'bump' || graph === 'slope' || graph === 'parallel') {
-        // For area charts, fill is true
-        const areaDatasets = datasets.map(ds => ({
-          ...ds,
-          fill: graph === 'area' || graph === 'stackedArea' || graph === 'stream' ? true : false,
-          tension: 0.3
-        }));
-        return {
-          type: 'line',
-          data: { labels: useLabels, datasets: areaDatasets },
-          options: {
-            ...commonOpts,
-            scales: graph === 'stackedArea' ? { y: { stacked: true } } : {}
-          }
-        };
-      }
-
-      // Default bar chart
-      return {
-        type: chartType,
-        data: { labels: useLabels, datasets: datasets },
-        options: commonOpts
-      };
+    } else {
+      const data = vt.vars.map(v => mean(colValues(v,true)));
+      datasets = [ mk({ label:'Mean value', data, catMap:Object.fromEntries(labels.map((l,i)=>[l,data[i]])), kind:'bar' }) ];
     }
+    if (graphType === 'stacked-bar-means') state.stackedMode = true;
+    const mode = graphType === 'radar-means' ? 'radar' : 'cartesian';
+    return { mode, xScale:'category', labels, datasets, desc: describeMulti(vt.vars, vt.group) };
+  }
 
-    // ---------- render chart ----------
-    function renderChart(overlay = false, forcedGraph = null) {
-      if (!workbookData || workbookData.length === 0) {
-        descText.innerText = 'Please upload an Excel file first.';
-        return;
-      }
-      const analysis = analysisType.value;
-      const graph = forcedGraph || graphType.value;
-      currentAnalysis = analysis;
-      currentGraph = graph;
-      const color = colorPicker.value;
-      const borderW = parseFloat(borderWidth.value);
-      const pointR = parseFloat(pointRadius.value);
-      const fill = fillToggle.checked;
+  return null;
+}
 
-      const chartConfig = buildChart(analysis, graph, workbookData, headers, color, borderW, pointR, fill);
-      if (!chartConfig) {
-        descText.innerText = '⚠️ Could not generate chart. Check numeric columns or try a different chart type.';
-        return;
-      }
+/* ------------------------------ Descriptions ------------------------------ */
 
-      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-      if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
+function describeSingleNumeric(name, vals, angle) {
+  const m = mean(vals), md = median(vals), sd = stdev(vals), mn = Math.min(...vals), mx = Math.max(...vals);
+  const skew = m - md;
+  let shape = 'roughly symmetric';
+  if (Math.abs(skew) > sd * 0.15) shape = skew > 0 ? 'right-skewed (a long tail of higher values)' : 'left-skewed (a long tail of lower values)';
+  return {
+    title: `${name} — ${angle}`,
+    cards: [ ['Count', vals.length], ['Mean', fmtNum(m)], ['Median', fmtNum(md)], ['Std dev', fmtNum(sd)], ['Min', fmtNum(mn)], ['Max', fmtNum(mx)] ],
+    text: `${name} spans from ${fmtNum(mn)} to ${fmtNum(mx)} across ${vals.length} values, centered around a mean of ${fmtNum(m)} (median ${fmtNum(md)}). The spread — one standard deviation — is about ${fmtNum(sd)}, and the shape looks ${shape}.`
+  };
+}
+function describeSingleCategorical(name, freq, total) {
+  const top = freq[0];
+  const share = total ? (top[1]/total*100) : 0;
+  return {
+    title: `${name} — category breakdown`,
+    freq: freq.slice(0,8),
+    text: `${name} has ${freq.length} distinct categories across ${total} records. "${top[0]}" is the most common, appearing ${top[1]} times (${fmtNum(share)}% of all records).`
+  };
+}
+function describeBivariateNumeric(a, b, xs, ys) {
+  const r = pearson(xs, ys);
+  const { slope, intercept } = linreg(xs, ys);
+  const dir = r > 0.02 ? 'positive' : (r < -0.02 ? 'negative' : 'negligible');
+  return {
+    title: `${a} vs ${b} — relationship`,
+    cards: [ ['n', xs.length], ['Correlation r', fmtNum(r)], ['Strength', corrStrength(r)], ['Slope', fmtNum(slope)], ['Intercept', fmtNum(intercept)] ],
+    text: `Across ${xs.length} paired observations, ${a} and ${b} show a ${corrStrength(r)} ${dir} correlation (r = ${fmtNum(r)}). On average, each one-unit increase in ${a} is associated with a change of ${fmtNum(slope)} in ${b}.`
+  };
+}
+function describeCatNum(catCol, numCol, g) {
+  const labels = Object.keys(g);
+  const means = labels.map(l => mean(g[l]));
+  let hiIdx = 0, loIdx = 0;
+  means.forEach((v,i) => { if (v > means[hiIdx]) hiIdx = i; if (v < means[loIdx]) loIdx = i; });
+  const rows = labels.map((l,i) => [l, g[l].length, fmtNum(means[i]), fmtNum(Math.min(...g[l])), fmtNum(Math.max(...g[l]))]);
+  return {
+    title: `${numCol} by ${catCol}`,
+    table: { head:['Category','n','Mean','Min','Max'], rows },
+    text: `"${labels[hiIdx]}" has the highest average ${numCol} (${fmtNum(means[hiIdx])}), while "${labels[loIdx]}" has the lowest (${fmtNum(means[loIdx])}), across ${labels.length} categories.`
+  };
+}
+function describeCrosstab(colA, colB, counts, labelsA, valuesB) {
+  let best = { a:null, b:null, n:-1 }, total = 0;
+  labelsA.forEach(a => valuesB.forEach(b => { const n = (counts[a] && counts[a][b]) || 0; total += n; if (n > best.n) best = { a, b, n }; }));
+  return {
+    title: `${colA} × ${colB} — cross-tabulation`,
+    text: `Across ${total} co-occurrences, the most common combination is "${best.a}" with "${best.b}" (${best.n} records). ${colA} has ${labelsA.length} categories and ${colB} has ${valuesB.length}.`
+  };
+}
+function describeMulti(vars, group) {
+  const stats = vars.map(v => { const vals = colValues(v,true); return { v, m: mean(vals), sd: stdev(vals) }; });
+  let hi = stats[0]; stats.forEach(s => { if (s.m > hi.m) hi = s; });
+  const rows = stats.map(s => [s.v, fmtNum(s.m), fmtNum(s.sd)]);
+  return {
+    title: `${vars.join(', ')}${group ? ' grouped by ' + group : ''}`,
+    table: { head:['Variable','Mean','Std dev'], rows },
+    text: `Among the ${vars.length} variables compared, "${hi.v}" has the highest mean value (${fmtNum(hi.m)}).${group ? ' Bars are split by ' + group + ' to compare subgroup averages.' : ''}`
+  };
+}
 
-      if (overlay) {
-        const defaultConfig = buildChart(analysis, graph, workbookData, headers, '#b0c7e0', 2, 3, false);
-        if (defaultConfig) {
-          chartInstance = new Chart(ctx, defaultConfig);
-        }
-        const overlayConfig = buildChart(analysis, graph, workbookData, headers, '#e85d5d', 3, 5, false);
-        if (overlayConfig && chartInstance) {
-          overlayChart = new Chart(ctx, overlayConfig);
-          overlayActive = true;
-          if (overlayChart.data.datasets) {
-            overlayChart.data.datasets.forEach(ds => { ds.borderColor = '#d94f4f'; ds.backgroundColor = '#d94f4f40'; });
-            overlayChart.update();
-          }
-        } else {
-          renderChart(false);
-          overlayActive = false;
-          return;
-        }
-      } else {
-        chartInstance = new Chart(ctx, chartConfig);
-        overlayActive = false;
-      }
-      updateDescriptive(analysis, graph);
+/* ------------------------------ Chart engine ------------------------------ */
+
+function styleDataset(ds, color, o) {
+  ds.borderColor = color;
+  switch (ds.kind) {
+    case 'bar':
+      ds.type = ds.type || 'bar';
+      ds.backgroundColor = hexToRgba(color, o.opacity);
+      ds.borderWidth = o.borderWidth; ds.borderRadius = o.corner; ds.maxBarThickness = 46;
+      break;
+    case 'range-bar':
+      ds.type = 'bar';
+      ds.backgroundColor = hexToRgba(color, Math.max(15, o.opacity*0.75));
+      ds.borderWidth = o.borderWidth; ds.borderRadius = o.corner; ds.barPercentage = 0.5;
+      break;
+    case 'whisker':
+      ds.type = 'bar';
+      ds.backgroundColor = hexToRgba(color, 15);
+      ds.borderWidth = 1; ds.barPercentage = 0.14;
+      break;
+    case 'point':
+      ds.type = 'line'; ds.showLine = false;
+      ds.pointRadius = o.pointRadius + 3; ds.pointBackgroundColor = color; ds.pointBorderColor = '#0F1318'; ds.pointBorderWidth = 2;
+      break;
+    case 'line':
+      ds.type = 'line';
+      ds.backgroundColor = hexToRgba(color, o.opacity * 0.5);
+      ds.borderWidth = o.borderWidth; ds.tension = o.tension; ds.fill = o.fill;
+      ds.pointRadius = o.pointRadius; ds.pointBackgroundColor = color;
+      break;
+    case 'line-xy':
+      ds.type = 'line';
+      ds.backgroundColor = hexToRgba(color, o.opacity * 0.5);
+      ds.borderWidth = o.borderWidth; ds.tension = o.tension; ds.fill = o.fill;
+      ds.pointRadius = o.pointRadius; ds.pointBackgroundColor = color; ds.showLine = true;
+      break;
+    case 'scatter':
+      ds.type = 'scatter';
+      ds.backgroundColor = hexToRgba(color, Math.min(100, o.opacity + 25));
+      ds.pointRadius = o.pointRadius || 4; ds.showLine = false;
+      break;
+    case 'trend':
+      ds.type = 'line'; ds.borderDash = [7,5]; ds.borderWidth = Math.max(1,o.borderWidth-1);
+      ds.pointRadius = 0; ds.fill = false; ds.backgroundColor = 'transparent';
+      break;
+    case 'pie':
+      ds.backgroundColor = ds.data.map((_,i) => hexToRgba(state.palette[i % state.palette.length], Math.max(40,o.opacity)));
+      ds.borderColor = '#12161C'; ds.borderWidth = 2;
+      break;
+  }
+  return ds;
+}
+
+function createChart(mode, xScale, pieHint) {
+  const ctx = $('mainChart').getContext('2d');
+  const baseType = mode === 'pie' ? (pieHint || 'pie') : (mode === 'radar' ? 'radar' : (xScale === 'linear' ? 'scatter' : 'bar'));
+  state.chart = new Chart(ctx, {
+    type: baseType,
+    data: { labels: [], datasets: [] },
+    options: buildChartOptions(mode, xScale)
+  });
+}
+
+function mergeLabels(newLabels) {
+  if (!newLabels) return;
+  const cur = state.chart.data.labels || [];
+  const merged = cur.slice();
+  newLabels.forEach(l => { if (!merged.includes(l)) merged.push(l); });
+  state.chart.data.labels = merged;
+  state.chart.data.datasets.forEach(ds => {
+    if (ds._catMap) ds.data = merged.map(l => (l in ds._catMap) ? ds._catMap[l] : null);
+  });
+}
+
+function addSeriesToChart() {
+  const vt = currentVarTypes();
+  const graphType = $('graphType').value;
+  if (!graphType) return;
+  state.stackedMode = false;
+  const spec = buildSeries(vt, graphType);
+  if (!spec) return;
+
+  if (spec.mode === 'pie' && state.chartMode === 'pie' && state.chart) {
+    clearChart(); // pie/doughnut charts hold a single ring, so a new one replaces the last
+  } else if (state.chart && (state.chartMode !== spec.mode || (spec.xScale && state.chartXScale && spec.xScale !== state.chartXScale))) {
+    if (!confirm('This graph type needs a fresh canvas (different chart mode). Clear the current chart and continue?')) return;
+    clearChart();
+  }
+  if (!state.chart) createChart(spec.mode, spec.xScale, spec.chartTypeHint);
+  state.chartMode = spec.mode;
+  if (spec.xScale) state.chartXScale = spec.xScale;
+
+  const o = advOpts();
+  const groupId = 'grp_' + (++state.seriesCounter);
+  const addedIds = [];
+  spec.datasets.forEach((ds, i) => {
+    const color = state.palette[(state.chart.data.datasets.length) % state.palette.length];
+    const id = groupId + '_' + i;
+    ds._id = id; ds._catMap = ds.catMap || null; ds._kind = ds.kind; ds._colorHex = color;
+    styleDataset(ds, color, o);
+    delete ds.catMap; delete ds.kind;
+    state.chart.data.datasets.push(ds);
+    addedIds.push(id);
+  });
+  mergeLabels(spec.labels);
+  if (state.stackedMode) applyAdvancedOptionsLive();
+  state.chart.update();
+
+  state.seriesList.push({
+    groupId, ids: addedIds,
+    label: spec.datasets.map(d => d.label).join(' · '),
+    editable: spec.mode === 'cartesian' && spec.datasets.length === 1 && ['bar','line'].includes(spec.datasets[0]._kind)
+  });
+  if (spec.desc) renderStatsBlock(groupId, spec.desc);
+
+  $('chartEmpty').style.display = 'none';
+  $('statSeries').textContent = state.chart.data.datasets.length;
+  renderDatasetList();
+}
+
+function removeSeriesGroup(groupId) {
+  if (!state.chart) return;
+  state.chart.data.datasets = state.chart.data.datasets.filter(ds => ds._id.split('_').slice(0,2).join('_') !== groupId);
+  state.seriesList = state.seriesList.filter(s => s.groupId !== groupId);
+  const block = document.getElementById('desc_' + groupId);
+  if (block) block.remove();
+  if (!state.chart.data.datasets.length) {
+    $('chartEmpty').style.display = 'flex';
+    $('statsPanel').style.display = 'none';
+  }
+  state.chart.update();
+  $('statSeries').textContent = state.chart.data.datasets.length;
+  renderDatasetList();
+}
+
+function renderDatasetList() {
+  const wrap = $('datasetList');
+  wrap.innerHTML = '';
+  state.seriesList.forEach(s => {
+    const first = state.chart.data.datasets.find(d => d._id === s.ids[0]);
+    if (!first) return;
+    const row = document.createElement('div');
+    row.className = 'dataset-item';
+    row.innerHTML = `
+      <input type="color" value="${rgbaToHex(first._colorHex)}" title="Series color">
+      <span class="name">${escapeHtml(s.label)}</span>
+      ${s.editable ? `<select class="typeSel"><option value="bar">bar</option><option value="line">line</option></select>` : ''}
+      <button class="btn small danger">Remove</button>
+    `;
+    const colorInput = row.querySelector('input[type=color]');
+    colorInput.addEventListener('input', () => {
+      const o = advOpts();
+      s.ids.forEach(id => {
+        const ds = state.chart.data.datasets.find(d => d._id === id);
+        if (ds) { ds._colorHex = colorInput.value; styleDataset(ds, colorInput.value, o); }
+      });
+      state.chart.update();
+    });
+    if (s.editable) {
+      const sel = row.querySelector('.typeSel');
+      sel.value = first.type;
+      sel.addEventListener('change', () => {
+        const o = advOpts();
+        const ds = state.chart.data.datasets.find(d => d._id === s.ids[0]);
+        ds._kind = sel.value; ds.type = sel.value;
+        styleDataset(ds, ds._colorHex, o);
+        state.chart.update();
+      });
     }
+    row.querySelector('.danger').addEventListener('click', () => removeSeriesGroup(s.groupId));
+    wrap.appendChild(row);
+  });
+}
 
-    function updateDescriptive(analysis, graph) {
-      if (!workbookData || workbookData.length === 0) {
-        descText.innerText = 'No data loaded.';
-        return;
-      }
-      const numericCols = getNumericColumns(workbookData, headers);
-      let desc = `📊 Analysis: ${analysis} · Graph: ${graph} · Rows: ${workbookData.length} · Numeric columns: ${numericCols.join(', ') || 'none'}`;
-      if (numericCols.length > 0) {
-        const sampleCol = numericCols[0];
-        const values = workbookData.map(r => parseFloat(r[sampleCol])).filter(v => !isNaN(v));
-        if (values.length > 0) {
-          const mean = (values.reduce((a,b) => a+b, 0) / values.length).toFixed(2);
-          const min = Math.min(...values).toFixed(2);
-          const max = Math.max(...values).toFixed(2);
-          desc += ` · ${sampleCol}: mean ${mean}, min ${min}, max ${max}`;
-        }
-      }
-      descText.innerText = desc;
-    }
+function rgbaToHex(v) {
+  if (v && v.startsWith('#')) return v;
+  return '#4FD1C5';
+}
 
-    // ---------- file handling ----------
-    function handleFile(file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(firstSheet);
-          if (json.length === 0) {
-            fileStatus.innerText = '⚠️ Empty sheet';
-            return;
-          }
-          workbookData = json;
-          headers = Object.keys(json[0]);
-          fileStatus.innerText = `✅ ${json.length} rows, ${headers.length} cols`;
-          renderChart(false);
-        } catch (err) {
-          fileStatus.innerText = '❌ Error parsing file';
-          console.error(err);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
+function renderStatsBlock(groupId, desc) {
+  $('statsPanel').style.display = 'block';
+  const el = document.createElement('div');
+  el.className = 'desc-block';
+  el.id = 'desc_' + groupId;
+  let inner = `<h3>${escapeHtml(desc.title)}</h3>`;
+  if (desc.cards) {
+    inner += `<div class="stats-grid">` + desc.cards.map(([l,v]) => `<div class="stat-card"><div class="l">${escapeHtml(l)}</div><div class="v">${escapeHtml(String(v))}</div></div>`).join('') + `</div>`;
+  }
+  if (desc.freq) {
+    inner += `<table class="freq-table">` + desc.freq.map(([k,n]) => `<tr><td>${escapeHtml(k)}</td><td>${n}</td></tr>`).join('') + `</table>`;
+  }
+  if (desc.table) {
+    inner += `<table class="freq-table"><tr>${desc.table.head.map(h=>`<td style="color:var(--cyan);">${escapeHtml(h)}</td>`).join('')}</tr>` +
+      desc.table.rows.map(r => `<tr>${r.map(c=>`<td>${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('') + `</table>`;
+  }
+  inner += `<p>${escapeHtml(desc.text)}</p>`;
+  el.innerHTML = inner;
+  $('statsContent').prepend(el);
+}
 
-    fileInput.addEventListener('change', function(e) {
-      if (this.files.length > 0) {
-        handleFile(this.files[0]);
-      }
-    });
+function clearChart() {
+  if (state.chart) { state.chart.destroy(); state.chart = null; }
+  state.chartMode = null; state.chartXScale = null; state.stackedMode = false;
+  state.seriesList = [];
+  $('datasetList').innerHTML = '';
+  $('statsContent').innerHTML = '';
+  $('statsPanel').style.display = 'none';
+  $('chartEmpty').style.display = 'flex';
+  $('statSeries').textContent = '0';
+}
 
-    // ---------- event listeners ----------
-    applyGraphBtn.addEventListener('click', function() {
-      if (!workbookData) { alert('Load data first'); return; }
-      renderChart(overlayActive, graphType.value);
-    });
+$('addSeriesBtn').addEventListener('click', addSeriesToChart);
+$('clearChartBtn').addEventListener('click', () => { if (confirm('Clear all series from the chart?')) clearChart(); });
+['optPointRadius','optBorderWidth','optOpacity','optCorner','optTension','optFill'].forEach(id => {
+  $(id).addEventListener('input', () => {
+    if (!state.chart) return;
+    const o = advOpts();
+    state.chart.data.datasets.forEach(ds => styleDataset(ds, ds._colorHex, o));
+    state.chart.update();
+  });
+});
+</script>
+</body>
+</html>
 
-    analysisType.addEventListener('change', () => renderChart(overlayActive));
-    
-    // Title controls: update chart when title, size or color changes
-    function updateTitle() {
-      if (chartInstance) {
-        const title = chartTitleInput.value || 'MHM Chart';
-        const size = parseInt(titleSizeInput.value) || 18;
-        const color = titleColorInput.value || '#0b2b4a';
-        if (chartInstance.options.plugins.title) {
-          chartInstance.options.plugins.title.text = title;
-          chartInstance.options.plugins.title.font.size = size;
-          chartInstance.options.plugins.title.color = color;
-          chartInstance.update();
-        }
-      }
-    }
-    chartTitleInput.addEventListener('input', updateTitle);
-    titleSizeInput.addEventListener('input', updateTitle);
-    titleColorInput.addEventListener('input', updateTitle);
-
-    applyStyleBtn.addEventListener('click', () => {
-      renderChart(overlayActive, currentGraph);
-    });
-
-    overlayBtn.addEventListener('click', function() {
-      if (!workbookData) { alert('Load data first'); return; }
-      overlayActive = !overlayActive;
-      renderChart(overlayActive, currentGraph);
-    });
-
-    resetBtn.addEventListener('click', function() {
-      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-      if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
-      overlayActive = false;
-      renderChart(false, currentGraph);
-    });
-
-    // ---------- EXPORT report ----------
-    exportReportBtn.addEventListener('click', function() {
-      if (!workbookData || workbookData.length === 0) {
-        alert('No data loaded. Please upload an Excel file first.');
-        return;
-      }
-      const canvas = document.getElementById('myChart');
-      const chartImage = canvas.toDataURL('image/png');
-      const desc = document.getElementById('descText').innerText;
-      const analysis = currentAnalysis;
-      const graph = currentGraph;
-      const rows
